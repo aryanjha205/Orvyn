@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#72c924">
+    <title>Login | Orvyn</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="auth-body">
+    <div class="auth-card-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <!-- SVG Brand wordmark -->
+                <svg viewBox="0 0 160 50" class="auth-logo-svg" xmlns="http://www.w3.org/2000/svg">
+                    <text x="5" y="38" font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="36" letter-spacing="-0.5px">
+                        <tspan fill="#72C924">Or</tspan><tspan fill="#F52887">vyn.</tspan>
+                    </text>
+                </svg>
+                <p class="auth-subtitle">Welcome back! Sign in to see what's happening.</p>
+            </div>
+            
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="username_or_email">Username or Email</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" id="username_or_email" name="username_or_email" placeholder="Enter username or email" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="password">Password</label>
+                        <a href="#" id="forgot-pw-btn" class="forgot-link">Forgot password?</a>
+                    </div>
+                    <div class="input-wrapper">
+                        <i data-lucide="lock" class="input-icon"></i>
+                        <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+                
+                <div class="error-banner hidden" id="login-error"></div>
+                
+                <button type="submit" class="auth-submit-btn" id="login-submit-btn">
+                    <span>Log In</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>New to Orvyn? <a href="/register" class="auth-footer-link">Create an account</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        lucide.createIcons();
+        
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const submitBtn = document.getElementById('login-submit-btn');
+        
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            loginError.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Logging in...</span> <i data-lucide="loader" class="spin"></i>';
+            lucide.createIcons();
+            
+            const formData = new FormData(loginForm);
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Redirect to home feed
+                    window.location.href = '/';
+                } else {
+                    loginError.textContent = result.error || 'Failed to sign in. Please try again.';
+                    loginError.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span>Log In</span> <i data-lucide="arrow-right"></i>';
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                console.error(err);
+                loginError.textContent = 'An unexpected error occurred. Check your connection.';
+                loginError.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Log In</span> <i data-lucide="arrow-right"></i>';
+                lucide.createIcons();
+            }
+        });
+
+        // Forgot password simulation
+        document.getElementById('forgot-pw-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const usernameOrEmail = document.getElementById('username_or_email').value.strip || document.getElementById('username_or_email').value;
+            if (!usernameOrEmail) {
+                alert('Please type in your Username or Email first to request password reset instructions.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: usernameOrEmail.includes('@') ? usernameOrEmail : `${usernameOrEmail}@example.com` })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                } else {
+                    alert(result.error);
+                }
+            } catch(e) {
+                alert('Could not connect to service. Try again later.');
+            }
+        });
+    </script>
+</body>
+</html>

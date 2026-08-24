@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="feed-layout">
+    
+    <!-- Stories Horizonal Tray -->
+    <div class="stories-scroll-container">
+        <div class="stories-wrapper" id="stories-tray">
+            <!-- Add story trigger button -->
+            <div class="story-card add-story-btn-card" id="add-story-btn">
+                <div class="story-avatar-container">
+                    <img src="{{ user.profile_image or '/static/images/default-avatar.png' }}" alt="Your avatar">
+                    <div class="add-story-badge">
+                        <i data-lucide="plus"></i>
+                    </div>
+                </div>
+                <span class="story-user-name">Your story</span>
+            </div>
+            <!-- Dynamic stories injected here -->
+        </div>
+    </div>
+    
+    <!-- Story Media Hidden Input -->
+    <input type="file" id="story-file-input" accept="image/*,video/*" class="hidden">
+
+    <!-- Post Creation Box -->
+    <div class="create-post-card">
+        <div class="post-card-top">
+            <img src="{{ user.profile_image or '/static/images/default-avatar.png' }}" alt="{{ user.name }}" class="post-composer-avatar">
+            <div class="textarea-wrapper">
+                <textarea id="post-content-input" placeholder="What's on your mind, {{ user.name.split(' ')[0] }}?"></textarea>
+                <div class="ai-sparkle-badge" id="ai-write-inline-btn" title="AI Write post from a short idea">
+                    <i data-lucide="sparkles"></i>
+                    <span>AI Write</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upload file preview row -->
+        <div id="media-preview-container" class="media-preview-container hidden"></div>
+        
+        <div class="post-card-actions">
+            <div class="post-media-triggers">
+                <label for="post-image-file" class="media-trigger-item">
+                    <i data-lucide="image" class="green-icon"></i>
+                    <span>Photo</span>
+                </label>
+                <input type="file" id="post-image-file" accept="image/*" class="hidden" multiple>
+                
+                <label for="post-video-file" class="media-trigger-item">
+                    <i data-lucide="video" class="pink-icon"></i>
+                    <span>Video</span>
+                </label>
+                <input type="file" id="post-video-file" accept="video/*" class="hidden">
+                
+                <div class="media-trigger-item" id="post-ai-create-btn">
+                    <i data-lucide="wand-2" class="purple-icon"></i>
+                    <span>AI Create</span>
+                </div>
+            </div>
+            
+            <button class="publish-post-btn" id="publish-post-btn">
+                <span>Post</span>
+            </button>
+        </div>
+
+        <!-- AI Assistant Expanded Tools (hidden by default) -->
+        <div class="ai-composer-tools-panel hidden" id="ai-composer-panel">
+            <div class="ai-panel-header">
+                <div class="ai-panel-title">
+                    <i data-lucide="sparkles"></i>
+                    <span>Orvyn AI Post Creator</span>
+                </div>
+                <button class="ai-panel-close" id="ai-panel-close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="ai-panel-body">
+                <div class="ai-tool-group">
+                    <label>Generate Post from Idea</label>
+                    <div class="ai-input-row">
+                        <input type="text" id="ai-prompt-input" placeholder="E.g., I built my first Python AI project.">
+                        <button class="ai-action-button" id="ai-generate-submit">Write</button>
+                    </div>
+                </div>
+                <div class="ai-tools-row">
+                    <div class="ai-tool-select">
+                        <label for="ai-tone-select">Tone</label>
+                        <select id="ai-tone-select">
+                            <option value="friendly">Friendly</option>
+                            <option value="professional">Professional</option>
+                            <option value="funny">Funny</option>
+                            <option value="inspirational">Inspirational</option>
+                            <option value="educational">Educational</option>
+                            <option value="casual">Casual</option>
+                        </select>
+                    </div>
+                    <div class="ai-tool-select">
+                        <label for="ai-style-select">Style</label>
+                        <select id="ai-style-select">
+                            <option value="engaging">Engaging</option>
+                            <option value="short">Short</option>
+                            <option value="story">Story</option>
+                            <option value="thread">Thread</option>
+                        </select>
+                    </div>
+                    <button class="ai-secondary-action-btn" id="ai-improve-draft-btn">
+                        <i data-lucide="scissors"></i>
+                        <span>Improve Draft</span>
+                    </button>
+                    <button class="ai-secondary-action-btn" id="ai-hashtags-btn">
+                        <i data-lucide="hash"></i>
+                        <span>Add Hashtags</span>
+                    </button>
+                </div>
+                <div class="ai-generation-preview hidden" id="ai-preview-box">
+                    <div class="preview-header">AI Draft Suggestion:</div>
+                    <div class="preview-text" id="ai-preview-text"></div>
+                    <div class="preview-actions">
+                        <button class="preview-apply-btn" id="ai-apply-draft">Use Draft</button>
+                        <button class="preview-regenerate-btn" id="ai-regenerate">Regenerate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Promo Banner Card -->
+    <div class="ai-promo-banner" id="ai-promo-banner-card">
+        <div class="promo-content">
+            <h3>Hi {{ user.name.split(' ')[0] }}! 👋</h3>
+            <p>I can help you write posts, generate images, find people and more.</p>
+            <button class="promo-chat-btn" id="promo-chat-trigger-btn">
+                <span>Chat with AI Assistant</span>
+                <i data-lucide="arrow-right"></i>
+            </button>
+        </div>
+        <div class="promo-image-wrapper">
+            <!-- Green Accent Robot Character representation -->
+            <div class="ai-robot-character">
+                <div class="robot-head">
+                    <div class="robot-face">
+                        <div class="robot-eyes">
+                            <span class="eye"></span>
+                            <span class="eye"></span>
+                        </div>
+                        <div class="robot-mouth"></div>
+                    </div>
+                </div>
+                <div class="robot-body">
+                    <div class="robot-badge">O</div>
+                </div>
+            </div>
+        </div>
+        <button class="promo-close-btn" id="promo-close-btn" title="Dismiss banner"><i data-lucide="x"></i></button>
+    </div>
+
+    <!-- Feed Selection Navigation Tabs -->
+    <div class="feed-tabs-container">
+        <div class="feed-tabs-scroll">
+            <div class="feed-tabs">
+                <button class="feed-tab active" data-feed="for_you">For You</button>
+                <button class="feed-tab" data-feed="following">Following</button>
+                <button class="feed-tab" data-feed="trending">Trending</button>
+                <button class="feed-tab" data-feed="tech">Tech</button>
+                <button class="feed-tab" data-feed="creative">Creative</button>
+                <button class="feed-tab" data-feed="ai">AI</button>
+            </div>
+        </div>
+        <button class="feed-filter-btn" title="Feed settings"><i data-lucide="sliders-horizontal"></i></button>
+    </div>
+
+    <!-- Feed Container -->
+    <div class="feed-container" id="feed-posts-wrapper">
+        <!-- Posts will be dynamically rendered here via JS -->
+        
+        <!-- Skeleton loading template (rendered while loading posts) -->
+        <div class="skeleton-post-card" id="feed-skeleton">
+            <div class="skeleton-header">
+                <div class="skeleton-avatar"></div>
+                <div class="skeleton-meta">
+                    <div class="skeleton-line short"></div>
+                    <div class="skeleton-line tiny"></div>
+                </div>
+            </div>
+            <div class="skeleton-body">
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line half"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- End of feed / scroll trigger -->
+    <div id="infinite-scroll-trigger" class="scroll-trigger">
+        <div class="loading-spinner hidden" id="scroll-spinner"></div>
+    </div>
+
+</div>
+
+<!-- Comment Modal Drawer -->
+<div class="modal-overlay hidden" id="comment-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Comments</h3>
+            <button class="modal-close" id="comment-modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="modal-body comment-modal-body">
+            <!-- Parent Post snippet -->
+            <div class="parent-post-snippet" id="comment-modal-post-snippet"></div>
+            
+            <!-- Comments list -->
+            <div class="comments-list-wrapper" id="comments-list-container">
+                <!-- Dynamic comments injected here -->
+            </div>
+        </div>
+        <div class="modal-footer comment-modal-footer">
+            <div class="ai-reply-suggestions-row hidden" id="ai-replies-row">
+                <div class="ai-suggestions-title"><i data-lucide="sparkles"></i> AI Replies:</div>
+                <div class="ai-chips-container" id="ai-reply-chips"></div>
+            </div>
+            
+            <div class="comment-input-row">
+                <input type="text" id="comment-text-input" placeholder="Add a comment...">
+                <button class="comment-submit-btn" id="comment-submit-btn"><i data-lucide="send"></i></button>
+            </div>
+            <button class="ai-suggest-replies-btn" id="get-ai-replies-btn">
+                <i data-lucide="sparkles"></i>
+                <span>Get AI Reply Suggestions</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Story Viewer Modal -->
+<div class="story-viewer-overlay hidden" id="story-viewer">
+    <div class="story-viewer-card">
+        <div class="story-progress-bar-row" id="story-progress-row"></div>
+        <div class="story-viewer-header">
+            <div class="story-viewer-user">
+                <img id="story-viewer-avatar" src="/static/images/default-avatar.png" alt="User">
+                <span id="story-viewer-name">User Name</span>
+            </div>
+            <button class="story-viewer-close" id="story-viewer-close"><i data-lucide="x"></i></button>
+        </div>
+        <div class="story-viewer-content" id="story-viewer-media-box">
+            <!-- Image or Video rendered here -->
+        </div>
+        <button class="story-nav prev" id="story-prev-btn"><i data-lucide="chevron-left"></i></button>
+        <button class="story-nav next" id="story-next-btn"><i data-lucide="chevron-right"></i></button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/feed.js"></script>
+<script src="/static/js/create.js"></script>
+{% endblock %}

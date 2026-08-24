@@ -1,0 +1,7 @@
+Flask==3.0.3
+pymongo[srv]==4.8.0
+dnspython==2.6.1
+python-dotenv==1.0.1
+requests==2.32.3
+Pillow==10.4.0
+bcrypt==4.2.0

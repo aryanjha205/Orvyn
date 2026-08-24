@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="discover-layout">
+    <!-- AI-Powered Natural Language Search Card -->
+    <div class="discover-search-card">
+        <h2>Explore Orvyn</h2>
+        <p class="discover-search-desc">Search for topics, communities, users, or ask a natural-language question.</p>
+        
+        <div class="discover-search-bar-row">
+            <div class="search-input-wrapper">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="discover-search-input" placeholder="Try 'Find developers talking about AI agents'...">
+                <button class="ai-speech-sparkle-btn" id="ai-discover-search-btn" title="AI Semantic Search">
+                    <i data-lucide="sparkles"></i>
+                    <span>AI Search</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter tabs for search category -->
+        <div class="discover-filter-tabs">
+            <button class="search-filter-tab active" data-filter="all">All</button>
+            <button class="search-filter-tab" data-filter="posts">Posts</button>
+            <button class="search-filter-tab" data-filter="users">Users</button>
+            <button class="search-filter-tab" data-filter="communities">Communities</button>
+        </div>
+    </div>
+
+    <!-- Discover Body (Columns layout) -->
+    <div class="discover-body-grid">
+        
+        <!-- Left Column: Search Results / Search status -->
+        <div class="discover-main-results">
+            <div class="results-header-row hidden" id="results-meta-header">
+                <h3 id="results-title">Search Results</h3>
+                <button class="clear-search-results-btn" id="clear-search-btn">Clear</button>
+            </div>
+            
+            <!-- Loader -->
+            <div class="search-loading hidden" id="search-spinner">
+                <div class="loading-spinner"></div>
+                <p>Analyzing Orvyn network...</p>
+            </div>
+
+            <!-- Dynamic Search Results injected here -->
+            <div class="search-results-wrapper" id="search-results-container">
+                <!-- Initial view before searching: show featured items -->
+                <div class="discover-featured-section">
+                    <h3>Explore Trending Communities</h3>
+                    <div class="featured-grid" id="featured-communities-list">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Trending tags & Recommendations -->
+        <div class="discover-sidebar">
+            <!-- Trending tags card -->
+            <div class="discover-card trending-topics-card">
+                <h3>Trending Tags</h3>
+                <div class="trending-list">
+                    <div class="trending-item" data-tag="ai">
+                        <span class="trending-tag">#ai</span>
+                        <span class="trending-volume">8.4k posts</span>
+                    </div>
+                    <div class="trending-item" data-tag="coding">
+                        <span class="trending-tag">#coding</span>
+                        <span class="trending-volume">5.2k posts</span>
+                    </div>
+                    <div class="trending-item" data-tag="webdev">
+                        <span class="trending-tag">#webdev</span>
+                        <span class="trending-volume">3.9k posts</span>
+                    </div>
+                    <div class="trending-item" data-tag="creative">
+                        <span class="trending-tag">#creative</span>
+                        <span class="trending-volume">2.1k posts</span>
+                    </div>
+                    <div class="trending-item" data-tag="orvyn">
+                        <span class="trending-tag">#Orvyn</span>
+                        <span class="trending-volume">1.8k posts</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- People recommendations card -->
+            <div class="discover-card people-recommendations-card">
+                <h3>Suggested Creators</h3>
+                <div class="suggested-users-list" id="suggested-users-container">
+                    <!-- Dynamic suggested users list -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Discover controllers
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('discover-search-input');
+        const searchBtn = document.getElementById('ai-discover-search-btn');
+        const clearBtn = document.getElementById('clear-search-btn');
+        const resultsHeader = document.getElementById('results-meta-header');
+        const resultsTitle = document.getElementById('results-title');
+        const resultsContainer = document.getElementById('search-results-container');
+        const spinner = document.getElementById('search-spinner');
+        const filterTabs = document.querySelectorAll('.search-filter-tab');
+        
+        let currentFilter = 'all';
+
+        // Load initial explore data
+        loadFeaturedData();
+
+        // Handle searching
+        async function performSearch(query) {
+            if (!query.strip || !query.trim()) return;
+            
+            spinner.classList.remove('hidden');
+            resultsContainer.innerHTML = '';
+            resultsHeader.classList.remove('hidden');
+            resultsTitle.textContent = `Search results for "${query}"`;
+            
+            try {
+                // If it looks like a natural language query, route to assistant or let backend do semantic matches
+                const response = await fetch(`/api/communities?q=${encodeURIComponent(query)}`);
+                const commData = await response.json();
+                
+                // Let's search posts using our search indexing
+                const feedResponse = await fetch(`/api/feed?type=trending&limit=15`); // Fetch trending posts for simulation
+                const feedData = await feedResponse.json();
+                
+                // Let's filter posts that contain search query
+                const filteredPosts = feedData.posts.filter(p => 
+                    p.content.toLowerCase().includes(query.toLowerCase()) || 
+                    p.hashtags.some(h => h.toLowerCase().includes(query.toLowerCase()))
+                );
+                
+                // Let's search users: get suggested profiles and filter
+                const usersResponse = await fetch('/api/feed?type=for_you&limit=10'); // Fetch users indirectly or show recommendations
+                // We'll query users list via dummy lookup
+                const users = [
+                    { id: '1', name: 'Aarav Mehta', username: 'aarav.dev', profile_image: '/static/images/default-avatar.png', bio: 'AI researcher and web developer.' },
+                    { id: '2', name: 'Diya Sharma', username: 'diya.live', profile_image: '/static/images/default-avatar.png', bio: 'Creative designer making clean UIs.' },
+                    { id: '3', name: 'Kabir Dev', username: 'kabir.build', profile_image: '/static/images/default-avatar.png', bio: 'Building agents with Python and MongoDB.' }
+                ].filter(u => u.name.toLowerCase().includes(query.toLowerCase()) || u.username.toLowerCase().includes(query.toLowerCase()) || u.bio.toLowerCase().includes(query.toLowerCase()));
+
+                spinner.classList.add('hidden');
+                renderSearchResults(query, users, filteredPosts, commData.communities || []);
+            } catch (err) {
+                console.error(err);
+                spinner.classList.add('hidden');
+                resultsContainer.innerHTML = '<p class="error-msg">Error executing search. Try again.</p>';
+            }
+        }
+
+        searchBtn.addEventListener('click', () => performSearch(searchInput.value));
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch(searchInput.value);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            resultsHeader.classList.add('hidden');
+            resultsContainer.innerHTML = '';
+            loadFeaturedData();
+        });
+
+        // Filter tabs selector
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                filterTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentFilter = tab.getAttribute('data-filter');
+                if (searchInput.value.trim()) {
+                    performSearch(searchInput.value);
+                }
+            });
+        });
+
+        // Render search result layout card items
+        function renderSearchResults(query, users, posts, communities) {
+            resultsContainer.innerHTML = '';
+            
+            let usersToRender = currentFilter === 'all' || currentFilter === 'users' ? users : [];
+            let postsToRender = currentFilter === 'all' || currentFilter === 'posts' ? posts : [];
+            let commsToRender = currentFilter === 'all' || currentFilter === 'communities' ? communities : [];
+
+            if (usersToRender.length === 0 && postsToRender.length === 0 && commsToRender.length === 0) {
+                resultsContainer.innerHTML = `<div class="no-results">No items found matching "${query}". Try another query!</div>`;
+                return;
+            }
+
+            // 1. Render Users
+            if (usersToRender.length > 0) {
+                const sec = document.createElement('div');
+                sec.className = 'search-result-section';
+                sec.innerHTML = '<h3>Users</h3>';
+                const grid = document.createElement('div');
+                grid.className = 'users-result-grid';
+                
+                usersToRender.forEach(u => {
+                    grid.innerHTML += `
+                        <div class="user-search-card">
+                            <img src="${u.profile_image}" alt="${u.name}">
+                            <div class="user-meta">
+                                <span class="u-name">${u.name}</span>
+                                <span class="u-handle">@${u.username}</span>
+                                <p class="u-bio">${u.bio}</p>
+                            </div>
+                            <button class="u-follow-btn" onclick="followSearchUser(this, '${u.id}')">Follow</button>
+                        </div>
+                    `;
+                });
+                sec.appendChild(grid);
+                resultsContainer.appendChild(sec);
+            }
+
+            // 2. Render Communities
+            if (commsToRender.length > 0) {
+                const sec = document.createElement('div');
+                sec.className = 'search-result-section';
+                sec.innerHTML = '<h3>Communities</h3>';
+                const grid = document.createElement('div');
+                grid.className = 'communities-result-grid';
+                
+                commsToRender.forEach(c => {
+                    grid.innerHTML += `
+                        <div class="community-search-card">
+                            <img src="${c.image}" alt="${c.name}">
+                            <div class="comm-meta">
+                                <span class="c-name">${c.name}</span>
+                                <span class="c-members">${c.members_count} members</span>
+                                <p class="c-desc">${c.description}</p>
+                            </div>
+                            <button class="c-join-btn ${c.is_member ? 'joined' : ''}" onclick="joinSearchComm(this, '${c.id}')">
+                                ${c.is_member ? 'Joined' : 'Join'}
+                            </button>
+                        </div>
+                    `;
+                });
+                sec.appendChild(grid);
+                resultsContainer.appendChild(sec);
+            }
+
+            // 3. Render Posts
+            if (postsToRender.length > 0) {
+                const sec = document.createElement('div');
+                sec.className = 'search-result-section';
+                sec.innerHTML = '<h3>Posts</h3>';
+                const list = document.createElement('div');
+                list.className = 'posts-result-list';
+                
+                postsToRender.forEach(p => {
+                    list.innerHTML += `
+                        <div class="post-search-card">
+                            <div class="post-header">
+                                <img src="${p.author.profile_image}" alt="${p.author.name}">
+                                <div class="post-meta">
+                                    <span class="author-name">${p.author.name}</span>
+                                    <span class="author-handle">@${p.author.username}</span>
+                                </div>
+                            </div>
+                            <p class="post-body">${p.content}</p>
+                            <div class="post-stats">
+                                <span><i data-lucide="heart"></i> ${p.likes_count}</span>
+                                <span><i data-lucide="message-circle"></i> ${p.comments_count}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                sec.appendChild(list);
+                resultsContainer.appendChild(sec);
+                lucide.createIcons();
+            }
+        }
+
+        // Suggested users & featured communities
+        async function loadFeaturedData() {
+            try {
+                // Communities
+                const response = await fetch('/api/communities');
+                const commData = await response.json();
+                const commList = document.getElementById('featured-communities-list');
+                
+                if (commList && commData.success) {
+                    commList.innerHTML = '';
+                    commData.communities.slice(0, 3).forEach(c => {
+                        commList.innerHTML += `
+                            <div class="community-explore-card" onclick="window.location.href='/communities'">
+                                <img src="${c.image}" alt="${c.name}">
+                                <div class="explore-comm-meta">
+                                    <h4>${c.name}</h4>
+                                    <p>${c.description}</p>
+                                    <span>${c.members_count} members</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Suggested Creators
+                const suggestContainer = document.getElementById('suggested-users-container');
+                if (suggestContainer) {
+                    suggestContainer.innerHTML = `
+                        <div class="suggested-user-row">
+                            <img src="/static/images/default-avatar.png" alt="Aarav">
+                            <div class="user-info" onclick="window.location.href='/profile/aarav.dev'">
+                                <span class="name">Aarav Mehta</span>
+                                <span class="handle">@aarav.dev</span>
+                            </div>
+                            <button class="s-follow-btn" onclick="followSuggestUser(this, 'aarav')">Follow</button>
+                        </div>
+                        <div class="suggested-user-row">
+                            <img src="/static/images/default-avatar.png" alt="Diya">
+                            <div class="user-info" onclick="window.location.href='/profile/diya.live'">
+                                <span class="name">Diya Sharma</span>
+                                <span class="handle">@diya.live</span>
+                            </div>
+                            <button class="s-follow-btn" onclick="followSuggestUser(this, 'diya')">Follow</button>
+                        </div>
+                    `;
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // Toggles in page
+        window.followSearchUser = async (btn, id) => {
+            btn.disabled = true;
+            btn.textContent = 'Following';
+            btn.classList.add('joined');
+        };
+        window.joinSearchComm = async (btn, id) => {
+            btn.disabled = true;
+            btn.textContent = 'Joined';
+            btn.classList.add('joined');
+        };
+        window.followSuggestUser = (btn, id) => {
+            btn.disabled = true;
+            btn.textContent = 'Following';
+            btn.classList.add('joined');
+        };
+
+        // Click trending items to fill search
+        document.querySelectorAll('.trending-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const tag = item.getAttribute('data-tag');
+                searchInput.value = `#${tag}`;
+                performSearch(`#${tag}`);
+            });
+        });
+    });
+</script>
+{% endblock %}

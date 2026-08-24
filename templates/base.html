@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#72c924">
+    <meta name="description" content="Orvyn — AI-Powered Social Media Progressive Web App">
+    <title>Orvyn</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- App Layout Wrapper -->
+    <div class="app-container">
+        
+        <!-- Desktop Header & Sidebar -->
+        <header class="app-header">
+            <div class="header-content">
+                <a href="/" class="logo-wrapper">
+                    <!-- Stylized Cursive SVG Representation of Orvyn Logo -->
+                    <svg viewBox="0 0 120 40" class="orvyn-logo-svg" xmlns="http://www.w3.org/2000/svg">
+                        <text x="5" y="30" font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="28" letter-spacing="-0.5px">
+                            <tspan fill="#72C924">Or</tspan><tspan fill="#F52887">vyn.</tspan>
+                        </text>
+                    </svg>
+                </a>
+                
+                <div class="header-search-bar">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="global-search-input" placeholder="Search Orvyn...">
+                    <div id="search-dropdown" class="search-dropdown-results hidden"></div>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="notification-bell-container" id="notif-bell-btn">
+                        <i data-lucide="bell"></i>
+                        <span class="notification-badge hidden" id="notif-badge-count">0</span>
+                    </div>
+                    <a href="/profile" class="header-avatar-link">
+                        <img src="{{ user.profile_image or '/static/images/default-avatar.png' }}" alt="{{ user.name }}" class="header-user-avatar">
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Body Workspace -->
+        <div class="app-body">
+            
+            <!-- Desktop Sidebar -->
+            <nav class="desktop-sidebar">
+                <div class="sidebar-links">
+                    <a href="/" class="sidebar-item {% if active_tab == 'home' %}active{% endif %}">
+                        <i data-lucide="home"></i>
+                        <span>Home</span>
+                    </a>
+                    <a href="/discover" class="sidebar-item {% if active_tab == 'discover' %}active{% endif %}">
+                        <i data-lucide="compass"></i>
+                        <span>Discover</span>
+                    </a>
+                    <a href="/communities" class="sidebar-item {% if active_tab == 'communities' %}active{% endif %}">
+                        <i data-lucide="users"></i>
+                        <span>Communities</span>
+                    </a>
+                    <a href="/messages" class="sidebar-item {% if active_tab == 'messages' %}active{% endif %}">
+                        <i data-lucide="message-square"></i>
+                        <span>Messages</span>
+                        <span class="message-badge hidden" id="msg-badge-count">0</span>
+                    </a>
+                    <a href="/profile" class="sidebar-item {% if active_tab == 'profile' %}active{% endif %}">
+                        <i data-lucide="user"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="/settings" class="sidebar-item {% if active_tab == 'settings' %}active{% endif %}">
+                        <i data-lucide="settings"></i>
+                        <span>Settings</span>
+                    </a>
+                </div>
+                
+                <button class="sidebar-create-btn" id="desktop-create-btn">
+                    <i data-lucide="plus"></i>
+                    <span>Create Post</span>
+                </button>
+                
+                <div class="sidebar-footer-profile">
+                    <img src="{{ user.profile_image or '/static/images/default-avatar.png' }}" alt="Profile avatar">
+                    <div class="profile-meta">
+                        <div class="profile-name">{{ user.name }}</div>
+                        <div class="profile-handle">@{{ user.username }}</div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Page Panel -->
+            <main class="main-content">
+                {% block content %}{% endblock %}
+            </main>
+            
+        </div>
+
+        <!-- Mobile Bottom Navigation Bar -->
+        <nav class="mobile-bottom-nav">
+            <a href="/" class="mobile-nav-item {% if active_tab == 'home' %}active{% endif %}">
+                <i data-lucide="home"></i>
+                <span>Home</span>
+            </a>
+            <a href="/discover" class="mobile-nav-item {% if active_tab == 'discover' %}active{% endif %}">
+                <i data-lucide="compass"></i>
+                <span>Discover</span>
+            </a>
+            
+            <!-- Highlighted Plus Create Button in Center -->
+            <div class="mobile-create-trigger" id="mobile-create-btn">
+                <div class="create-btn-circle">
+                    <i data-lucide="plus"></i>
+                </div>
+            </div>
+            
+            <a href="/communities" class="mobile-nav-item {% if active_tab == 'communities' %}active{% endif %}">
+                <i data-lucide="users"></i>
+                <span>Groups</span>
+            </a>
+            <a href="/messages" class="mobile-nav-item {% if active_tab == 'messages' %}active{% endif %}">
+                <i data-lucide="message-square"></i>
+                <span>Messages</span>
+                <span class="message-badge mobile-badge hidden" id="msg-mobile-badge-count">0</span>
+            </a>
+        </nav>
+        
+        <!-- Persistent Floating AI Assistant Button & Drawer -->
+        <div class="ai-assistant-wrapper">
+            <!-- Floating Assistant Trigger -->
+            <button class="ai-assistant-trigger" id="ai-assistant-trigger-btn" title="Chat with Orvyn AI">
+                <img src="/static/images/ai-bot-icon.png" alt="AI" class="ai-bot-avatar-img">
+                <span class="ai-pulse-ring"></span>
+            </button>
+            
+            <!-- Assistant Chat Window Drawer -->
+            <div class="ai-chat-drawer hidden" id="ai-chat-drawer">
+                <div class="ai-chat-header">
+                    <div class="ai-chat-title-wrapper">
+                        <div class="ai-bot-status-indicator"></div>
+                        <div class="ai-bot-name">Orvyn AI Assistant</div>
+                    </div>
+                    <button class="ai-chat-close-btn" id="ai-chat-close-btn"><i data-lucide="x"></i></button>
+                </div>
+                <div class="ai-chat-body" id="ai-chat-messages">
+                    <div class="ai-msg bot">
+                        <div class="ai-msg-bubble">
+                            Hi <strong>{{ user.name }}</strong>! 👋 I can help you write posts, find users, search posts, or navigate the application. Ask me anything!
+                        </div>
+                    </div>
+                </div>
+                <div class="ai-chat-input-area">
+                    <input type="text" id="ai-chat-input" placeholder="Ask Orvyn assistant...">
+                    <button id="ai-chat-send-btn"><i data-lucide="send"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Toast Alert Banner -->
+        <div class="toast-container" id="toast-container"></div>
+        
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Set local storage variables for user profile details
+        const CURRENT_USER = {
+            id: "{{ user._id }}",
+            name: "{{ user.name }}",
+            username: "{{ user.username }}",
+            profile_image: "{{ user.profile_image or '/static/images/default-avatar.png' }}"
+        };
+    </script>
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#72c924">
+    <title>Create Account | Orvyn</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="auth-body">
+    <div class="auth-card-container register-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <svg viewBox="0 0 160 50" class="auth-logo-svg" xmlns="http://www.w3.org/2000/svg">
+                    <text x="5" y="38" font-family="'Outfit', 'Inter', sans-serif" font-weight="800" font-size="36" letter-spacing="-0.5px">
+                        <tspan fill="#72C924">Or</tspan><tspan fill="#F52887">vyn.</tspan>
+                    </text>
+                </svg>
+                <p class="auth-subtitle">Create your account and discover AI-powered social experiences.</p>
+            </div>
+            
+            <form id="register-form" class="auth-form" enctype="multipart/form-data">
+                
+                <!-- Avatar upload container -->
+                <div class="avatar-upload-wrapper">
+                    <div class="avatar-preview-box">
+                        <img id="avatar-preview" src="/static/images/default-avatar.png" alt="Avatar Preview">
+                        <div class="upload-badge">
+                            <i data-lucide="camera"></i>
+                        </div>
+                    </div>
+                    <input type="file" id="profile_image" name="profile_image" accept="image/*" class="hidden-file-input">
+                    <label for="profile_image" class="avatar-upload-label">Choose Profile Photo</label>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="user" class="input-icon"></i>
+                            <input type="text" id="name" name="name" placeholder="E.g., Diya Sharma" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="at-sign" class="input-icon"></i>
+                            <input type="text" id="username" name="username" placeholder="E.g., diya.live" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="mail" class="input-icon"></i>
+                        <input type="email" id="email" name="email" placeholder="E.g., diya@gmail.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i data-lucide="lock" class="input-icon"></i>
+                        <input type="password" id="password" name="password" placeholder="Min. 6 characters" required>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="map-pin" class="input-icon"></i>
+                            <input type="text" id="location" name="location" placeholder="E.g., San Francisco, CA">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="website">Website</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="globe" class="input-icon"></i>
+                            <input type="url" id="website" name="website" placeholder="https://example.com">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" name="bio" rows="3" placeholder="Tell us about yourself..."></textarea>
+                </div>
+                
+                <!-- Interests multi-select area -->
+                <div class="form-group">
+                    <label>Choose Interests (Tags)</label>
+                    <div class="interest-tags-grid" id="interests-grid">
+                        <div class="interest-tag" data-tag="ai">AI & Tech</div>
+                        <div class="interest-tag" data-tag="coding">Coding</div>
+                        <div class="interest-tag" data-tag="creative">Creative</div>
+                        <div class="interest-tag" data-tag="design">Design</div>
+                        <div class="interest-tag" data-tag="writing">Writing</div>
+                        <div class="interest-tag" data-tag="music">Music</div>
+                        <div class="interest-tag" data-tag="travel">Travel</div>
+                        <div class="interest-tag" data-tag="social">Social</div>
+                    </div>
+                    <!-- Hidden input to hold serialized interest values -->
+                    <input type="hidden" id="interests-input" name="interests" value="">
+                </div>
+                
+                <div class="error-banner hidden" id="register-error"></div>
+                
+                <button type="submit" class="auth-submit-btn" id="register-submit-btn">
+                    <span>Create Account</span>
+                    <i data-lucide="check"></i>
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Already have an account? <a href="/login" class="auth-footer-link">Log In</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        lucide.createIcons();
+        
+        // Handle avatar upload preview
+        const fileInput = document.getElementById('profile_image');
+        const avatarPreview = document.getElementById('avatar-preview');
+        
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    avatarPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Handle interactive interest tag selection
+        const tagElements = document.querySelectorAll('.interest-tag');
+        const interestsInput = document.getElementById('interests-input');
+        const selectedTags = new Set();
+        
+        tagElements.forEach(tag => {
+            tag.addEventListener('click', () => {
+                const tagValue = tag.getAttribute('data-tag');
+                if (selectedTags.has(tagValue)) {
+                    selectedTags.delete(tagValue);
+                    tag.classList.remove('active');
+                } else {
+                    selectedTags.add(tagValue);
+                    tag.classList.add('active');
+                }
+                interestsInput.value = Array.from(selectedTags).join(',');
+            });
+        });
+        
+        // Handle submission
+        const registerForm = document.getElementById('register-form');
+        const registerError = document.getElementById('register-error');
+        const submitBtn = document.getElementById('register-submit-btn');
+        
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            registerError.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Creating Account...</span> <i data-lucide="loader" class="spin"></i>';
+            lucide.createIcons();
+            
+            const formData = new FormData(registerForm);
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    window.location.href = '/';
+                } else {
+                    registerError.textContent = result.error || 'Failed to register account.';
+                    registerError.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span>Create Account</span> <i data-lucide="check"></i>';
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                console.error(err);
+                registerError.textContent = 'Network error. Could not connect to backend.';
+                registerError.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Create Account</span> <i data-lucide="check"></i>';
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

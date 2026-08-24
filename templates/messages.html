@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="messages-layout">
+    
+    <!-- Left Column: Chats Thread List -->
+    <div class="messages-sidebar" id="messages-sidebar-panel">
+        <div class="sidebar-search-user">
+            <h3>Inbox</h3>
+            <div class="new-chat-search-row">
+                <i data-lucide="search"></i>
+                <input type="text" id="user-search-input" placeholder="Search users to chat...">
+            </div>
+            <!-- Search results box -->
+            <div id="new-chat-search-results" class="search-results-box hidden"></div>
+        </div>
+
+        <div class="threads-list-container" id="inbox-threads-list">
+            <!-- Threads loaded dynamically -->
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading messages...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Chat Workspace -->
+    <div class="messages-chat-workspace" id="chat-workspace-panel">
+        <!-- Default State: No conversation open -->
+        <div class="no-conversation-open-state" id="no-chat-open-placeholder">
+            <div class="placeholder-content">
+                <i data-lucide="message-square" class="placeholder-icon"></i>
+                <h3>Your Messaging Desk</h3>
+                <p>Select a thread from the inbox list or start a new chat with a search to begin messaging.</p>
+            </div>
+        </div>
+
+        <!-- Chat Opened State -->
+        <div class="chat-workspace-main hidden" id="active-chat-container">
+            <!-- Header panel -->
+            <div class="chat-header-panel">
+                <div class="chat-partner-info" id="chat-header-profile-link">
+                    <img id="chat-partner-avatar" src="/static/images/default-avatar.png" alt="Partner">
+                    <div class="meta">
+                        <span class="name" id="chat-partner-name">User Name</span>
+                        <div class="status-row">
+                            <span class="status-indicator online"></span>
+                            <span class="status-text">Online</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conversation AI insights -->
+                <div class="chat-header-ai-actions">
+                    <button class="ai-chat-insight-btn" id="ai-chat-summarize-btn" title="Summarize conversation">
+                        <i data-lucide="list-collapse"></i>
+                        <span>Summary</span>
+                    </button>
+                    <button class="ai-chat-insight-btn" id="ai-chat-tasks-btn" title="Extract task checklist">
+                        <i data-lucide="check-square"></i>
+                        <span>Action Items</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Insight Drawer (shown when clicked) -->
+            <div class="chat-ai-insight-drawer hidden" id="chat-ai-insight-panel">
+                <div class="drawer-header">
+                    <span id="chat-ai-drawer-title">Conversation Summary</span>
+                    <button id="close-chat-ai-drawer"><i data-lucide="x"></i></button>
+                </div>
+                <div class="drawer-body" id="chat-ai-drawer-content"></div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="chat-messages-stream" id="chat-messages-scroll-area">
+                <!-- Messages appended dynamically -->
+            </div>
+
+            <!-- Footer Message Input Area -->
+            <div class="chat-footer-composer-panel">
+                <!-- Suggested replies row -->
+                <div class="ai-suggested-reply-row hidden" id="chat-ai-replies-wrapper">
+                    <div class="suggest-title"><i data-lucide="sparkles"></i> AI Replies:</div>
+                    <div class="chips" id="chat-ai-reply-chips-container"></div>
+                </div>
+                
+                <div class="composer-row">
+                    <!-- Media file upload trigger -->
+                    <label for="msg-media-file" class="composer-action-btn" title="Attach picture">
+                        <i data-lucide="image"></i>
+                    </label>
+                    <input type="file" id="msg-media-file" accept="image/*" class="hidden">
+                    
+                    <input type="text" id="msg-text-input" placeholder="Type a message...">
+                    
+                    <button class="composer-send-btn" id="msg-send-btn">
+                        <i data-lucide="send"></i>
+                    </button>
+                </div>
+                
+                <!-- Translation dropdown -->
+                <div class="composer-helpers-row">
+                    <div class="translation-select-wrapper">
+                        <i data-lucide="languages"></i>
+                        <select id="msg-translate-language">
+                            <option value="">No Translation</option>
+                            <option value="spanish">Translate to Spanish</option>
+                            <option value="french">Translate to French</option>
+                            <option value="german">Translate to German</option>
+                            <option value="japanese">Translate to Japanese</option>
+                        </select>
+                    </div>
+                    <div id="attached-media-indicator" class="attached-media-preview hidden">
+                        <span>Image attached</span>
+                        <button id="remove-msg-attachment"><i data-lucide="x"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/messages.js"></script>
+{% endblock %}

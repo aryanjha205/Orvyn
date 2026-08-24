@@ -1,0 +1,510 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="communities-layout">
+    
+    <!-- URL parameter workspace conditional routing -->
+    <div id="communities-index-view" class="communities-index-view">
+        <div class="comm-index-header">
+            <div>
+                <h2>Communities</h2>
+                <p>Join topic-based groups, share posts, and interact with the group AI moderator.</p>
+            </div>
+            <button class="create-comm-btn" id="open-create-comm-modal-btn">
+                <i data-lucide="plus"></i>
+                <span>Create Community</span>
+            </button>
+        </div>
+
+        <div class="communities-categories-tabs">
+            <button class="comm-tab active" data-category="all">All Groups</button>
+            <button class="comm-tab" data-category="tech">Tech & Coding</button>
+            <button class="comm-tab" data-category="design">Design & UI</button>
+            <button class="comm-tab" data-category="creative">Creative & Writing</button>
+        </div>
+
+        <!-- Lists grid -->
+        <div class="communities-grid-wrapper">
+            <h3>Explore Recommended Communities</h3>
+            <div class="communities-grid" id="all-communities-grid">
+                <!-- Dynamically loaded list cards -->
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading communities...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Single Community View (Hidden by default, shown when community selected) -->
+    <div id="single-community-view" class="single-community-view hidden">
+        <div class="comm-back-row">
+            <button class="comm-back-btn" id="comm-back-to-list-btn">
+                <i data-lucide="arrow-left"></i>
+                <span>Back to Communities</span>
+            </button>
+        </div>
+
+        <!-- Banner card header -->
+        <div class="active-comm-banner-card">
+            <div class="comm-banner-bg" id="comm-active-cover"></div>
+            <div class="active-comm-details">
+                <img id="comm-active-image" src="/static/images/default-community.png" alt="Community Image">
+                <div class="comm-active-text-meta">
+                    <div class="title-row">
+                        <h2 id="comm-active-name">Community Name</h2>
+                        <span class="category-badge" id="comm-active-category">Tech</span>
+                    </div>
+                    <p id="comm-active-desc">Community description and guidelines go here.</p>
+                    <span class="members-count" id="comm-active-members-count">1 member</span>
+                </div>
+                <button class="comm-active-join-btn" id="comm-active-join-action-btn">Join Group</button>
+            </div>
+        </div>
+
+        <div class="active-comm-workspace-grid">
+            <!-- Left panel: feed posts specific to this community -->
+            <div class="comm-workspace-feed-column">
+                <!-- Write post container targeting this community -->
+                <div class="comm-write-post-box hidden" id="comm-post-composer">
+                    <textarea id="comm-post-textarea" placeholder="Share something with this community..."></textarea>
+                    <div class="comm-post-actions">
+                        <button class="comm-post-btn" id="comm-post-publish-btn">Post to Group</button>
+                    </div>
+                </div>
+
+                <!-- Community posts feed list -->
+                <div class="comm-posts-feed-container" id="comm-posts-feed-wrapper">
+                    <!-- Dynamic posts loaded via JS -->
+                </div>
+            </div>
+
+            <!-- Right panel: rules, categories, AI assistant tools -->
+            <div class="comm-workspace-sidebar-column">
+                <!-- AI Community Assistant Tool Widget -->
+                <div class="comm-sidebar-card ai-group-assistant-card">
+                    <div class="ai-card-title">
+                        <i data-lucide="sparkles"></i>
+                        <span>AI Group Moderator Assistant</span>
+                    </div>
+                    <p class="ai-card-description">Get insights about community engagement and extract answers automatically.</p>
+                    
+                    <div class="ai-buttons-stack">
+                        <button class="ai-group-tool-btn" id="ai-group-summarize-btn">
+                            <i data-lucide="list-collapse"></i>
+                            <span>Summarize Discussions</span>
+                        </button>
+                        <button class="ai-group-tool-btn" id="ai-group-questions-btn">
+                            <i data-lucide="help-circle"></i>
+                            <span>Unanswered Questions</span>
+                        </button>
+                        <button class="ai-group-tool-btn" id="ai-group-trends-btn">
+                            <i data-lucide="trending-up"></i>
+                            <span>Identify Trending Topics</span>
+                        </button>
+                    </div>
+
+                    <!-- Output display wrapper -->
+                    <div class="ai-group-output-box hidden" id="ai-group-output-display">
+                        <div class="output-header-row">
+                            <strong id="ai-output-title">AI Insight Summary</strong>
+                            <button id="close-ai-group-output" class="ai-out-close"><i data-lucide="x"></i></button>
+                        </div>
+                        <div class="output-content-text" id="ai-output-content-body"></div>
+                    </div>
+                </div>
+
+                <!-- Rules card -->
+                <div class="comm-sidebar-card rules-card">
+                    <h3>Community Rules</h3>
+                    <p id="comm-active-rules">Be respectful, collaborate, and follow standard code guidelines.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Community Modal Overlay -->
+<div class="modal-overlay hidden" id="create-comm-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Create a New Community</h3>
+            <button class="modal-close" id="create-comm-modal-close"><i data-lucide="x"></i></button>
+        </div>
+        <form id="create-comm-form" enctype="multipart/form-data">
+            <div class="modal-body">
+                <div class="form-group align-center">
+                    <div class="comm-image-upload-preview">
+                        <img id="comm-image-preview" src="/static/images/default-community.png" alt="Group Image">
+                        <label for="comm_image" class="comm-upload-badge"><i data-lucide="camera"></i></label>
+                    </div>
+                    <input type="file" id="comm_image" name="image" accept="image/*" class="hidden">
+                    <span>Community Icon Photo</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="comm_name">Community Name</label>
+                    <input type="text" id="comm_name" name="name" placeholder="E.g., PyTorch Developers" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="comm_description">Description</label>
+                    <textarea id="comm_description" name="description" rows="3" placeholder="What is this community about?" required></textarea>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="comm_category">Category</label>
+                        <select id="comm_category" name="category">
+                            <option value="tech">Tech & Coding</option>
+                            <option value="design">Design & UI</option>
+                            <option value="creative">Creative & Writing</option>
+                            <option value="general">General Discussions</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="comm_rules">Rules (Markdown or text)</label>
+                    <textarea id="comm_rules" name="rules" rows="3" placeholder="E.g., 1. Be polite. 2. Post high-quality coding setup tips."></textarea>
+                </div>
+                
+                <div class="error-banner hidden" id="comm-create-error"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="create-comm-cancel-btn">Cancel</button>
+                <button type="submit" class="btn-primary" id="create-comm-submit-btn">Create Group</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Communities dynamic handlers
+    document.addEventListener('DOMContentLoaded', () => {
+        const indexView = document.getElementById('communities-index-view');
+        const singleView = document.getElementById('single-community-view');
+        const commGrid = document.getElementById('all-communities-grid');
+        
+        const openModalBtn = document.getElementById('open-create-comm-modal-btn');
+        const modal = document.getElementById('create-comm-modal');
+        const closeModalBtn = document.getElementById('create-comm-modal-close');
+        const cancelModalBtn = document.getElementById('create-comm-cancel-btn');
+        const fileInput = document.getElementById('comm_image');
+        const imgPreview = document.getElementById('comm-image-preview');
+        const createForm = document.getElementById('create-comm-form');
+        const errorBanner = document.getElementById('comm-create-error');
+        
+        // Single Community DOM nodes
+        const backBtn = document.getElementById('comm-back-to-list-btn');
+        const activeName = document.getElementById('comm-active-name');
+        const activeDesc = document.getElementById('comm-active-desc');
+        const activeMembers = document.getElementById('comm-active-members-count');
+        const activeCategory = document.getElementById('comm-active-category');
+        const activeRules = document.getElementById('comm-active-rules');
+        const activeImage = document.getElementById('comm-active-image');
+        const joinBtn = document.getElementById('comm-active-join-action-btn');
+        
+        // Comm posting details
+        const postComposer = document.getElementById('comm-post-composer');
+        const postTextarea = document.getElementById('comm-post-textarea');
+        const postSubmitBtn = document.getElementById('comm-post-publish-btn');
+        const commFeedWrapper = document.getElementById('comm-posts-feed-wrapper');
+        
+        // AI tools panel details
+        const aiOutputDisplay = document.getElementById('ai-group-output-display');
+        const aiOutputTitle = document.getElementById('ai-output-title');
+        const aiOutputContent = document.getElementById('ai-output-content-body');
+        const closeAiOutput = document.getElementById('close-ai-group-output');
+        
+        let loadedCommunities = [];
+        let activeCommId = null;
+        let isMemberActive = false;
+
+        // Fetch all communities
+        loadCommunities();
+
+        async function loadCommunities() {
+            try {
+                const response = await fetch('/api/communities');
+                const result = await response.json();
+                if (result.success) {
+                    loadedCommunities = result.communities;
+                    renderCommunities(loadedCommunities);
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function renderCommunities(list) {
+            commGrid.innerHTML = '';
+            if (list.length === 0) {
+                commGrid.innerHTML = '<div class="no-results">No communities found. Click "Create Community" to create the first one!</div>';
+                return;
+            }
+            
+            list.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'community-card-item';
+                card.innerHTML = `
+                    <div class="card-image-box">
+                        <img src="${c.image}" alt="${c.name}">
+                    </div>
+                    <div class="card-content-box">
+                        <span class="c-category">#${c.category.toUpperCase()}</span>
+                        <h4>${c.name}</h4>
+                        <p>${c.description}</p>
+                        <div class="c-footer">
+                            <span>${c.members_count} Members</span>
+                            <button class="c-action-btn ${c.is_member ? 'joined' : ''}">${c.is_member ? 'Open' : 'Join'}</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Clicking Card opens group
+                card.addEventListener('click', () => {
+                    openCommunityWorkspace(c.id);
+                });
+                
+                commGrid.appendChild(card);
+            });
+        }
+
+        // Opens the specific workspace for a community
+        async function openCommunityWorkspace(id) {
+            activeCommId = id;
+            const comm = loadedCommunities.find(c => c.id === id);
+            if (!comm) return;
+            
+            indexView.classList.add('hidden');
+            singleView.classList.remove('hidden');
+            
+            // Set details
+            activeName.textContent = comm.name;
+            activeDesc.textContent = comm.description;
+            activeMembers.textContent = `${comm.members_count} member${comm.members_count !== 1 ? 's' : ''}`;
+            activeCategory.textContent = comm.category.toUpperCase();
+            activeImage.src = comm.image;
+            isMemberActive = comm.is_member;
+            
+            updateJoinButtonState();
+            
+            // Fetch group posts
+            loadCommunityFeed(id);
+            aiOutputDisplay.classList.add('hidden');
+        }
+
+        function updateJoinButtonState() {
+            if (isMemberActive) {
+                joinBtn.textContent = 'Leave Group';
+                joinBtn.classList.add('joined');
+                postComposer.classList.remove('hidden');
+            } else {
+                joinBtn.textContent = 'Join Group';
+                joinBtn.classList.remove('joined');
+                postComposer.classList.add('hidden');
+            }
+        }
+
+        async function toggleJoinLeaveGroup() {
+            const url = `/api/communities/${activeCommId}/${isMemberActive ? 'leave' : 'join'}`;
+            try {
+                const response = await fetch(url, { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    isMemberActive = !isMemberActive;
+                    
+                    // Update loaded community item
+                    const index = loadedCommunities.findIndex(c => c.id === activeCommId);
+                    if (index !== -1) {
+                        loadedCommunities[index].is_member = isMemberActive;
+                        loadedCommunities[index].members_count += isMemberActive ? 1 : -1;
+                        activeMembers.textContent = `${loadedCommunities[index].members_count} members`;
+                    }
+                    
+                    updateJoinButtonState();
+                    showToast(result.message);
+                } else {
+                    showToast(result.error);
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        joinBtn.addEventListener('click', toggleJoinLeaveGroup);
+
+        async function loadCommunityFeed(id) {
+            commFeedWrapper.innerHTML = '<div class="loading-state"><p>Loading posts...</p></div>';
+            try {
+                const response = await fetch(`/api/communities/${id}/posts`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    commFeedWrapper.innerHTML = '';
+                    if (result.posts.length === 0) {
+                        commFeedWrapper.innerHTML = '<div class="no-posts">No posts shared in this group yet. Be the first to post!</div>';
+                        return;
+                    }
+                    
+                    result.posts.forEach(p => {
+                        commFeedWrapper.appendChild(createPostCardElement(p));
+                    });
+                }
+            } catch(e) {
+                commFeedWrapper.innerHTML = '<p class="error-msg">Error loading posts feed.</p>';
+            }
+        }
+
+        // Post to Community
+        postSubmitBtn.addEventListener('click', async () => {
+            const content = postTextarea.value.trim();
+            if (!content) return;
+            
+            postSubmitBtn.disabled = true;
+            postSubmitBtn.textContent = 'Posting...';
+            
+            const formData = new FormData();
+            formData.append('content', content);
+            formData.append('community_id', activeCommId);
+            
+            try {
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    postTextarea.value = '';
+                    showToast('Post shared to community successfully!');
+                    loadCommunityFeed(activeCommId);
+                } else {
+                    showToast(result.error);
+                }
+            } catch(e) {
+                showToast('Connection error occurred.');
+            } finally {
+                postSubmitBtn.disabled = false;
+                postSubmitBtn.textContent = 'Post to Group';
+            }
+        });
+
+        // Back trigger
+        backBtn.addEventListener('click', () => {
+            singleView.classList.add('hidden');
+            indexView.classList.remove('hidden');
+            loadCommunities();
+        });
+
+        // AI Tools triggers
+        const handleAiGroupTool = async (type, title) => {
+            aiOutputDisplay.classList.remove('hidden');
+            aiOutputTitle.textContent = title;
+            aiOutputContent.innerHTML = '<p class="loading-insight"><i data-lucide="loader-2" class="spin"></i> Querying Orvyn AI moderator...</p>';
+            lucide.createIcons();
+            
+            // Format dynamic assistant request
+            const query = `Analyze the selected group community discussions. Task: ${title}. Provide a neat response for the group sidebar.`;
+            
+            try {
+                const response = await fetch('/api/ai/assistant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    aiOutputContent.innerHTML = `<p>${result.result.text}</p>`;
+                } else {
+                    aiOutputContent.textContent = result.error || 'Failed to query AI Moderator.';
+                }
+            } catch(e) {
+                aiOutputContent.textContent = 'Could not establish connection to model.';
+            }
+        };
+
+        document.getElementById('ai-group-summarize-btn').addEventListener('click', () => handleAiGroupTool('summary', 'Discussion Summary'));
+        document.getElementById('ai-group-questions-btn').addEventListener('click', () => handleAiGroupTool('questions', 'Unanswered Questions'));
+        document.getElementById('ai-group-trends-btn').addEventListener('click', () => handleAiGroupTool('trends', 'Trending Topics'));
+        closeAiOutput.addEventListener('click', () => aiOutputDisplay.classList.add('hidden'));
+
+        // Modals management
+        openModalBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            errorBanner.classList.add('hidden');
+        });
+        
+        const hideModal = () => {
+            modal.classList.add('hidden');
+            createForm.reset();
+            imgPreview.src = '/static/images/default-community.png';
+        };
+        closeModalBtn.addEventListener('click', hideModal);
+        cancelModalBtn.addEventListener('click', hideModal);
+
+        // Preview uploaded image
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => imgPreview.src = e.target.result;
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Form Submit
+        createForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorBanner.classList.add('hidden');
+            
+            const submitBtn = document.getElementById('create-comm-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating...';
+            
+            const formData = new FormData(createForm);
+            
+            try {
+                const response = await fetch('/api/communities', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    hideModal();
+                    loadCommunities();
+                    showToast('Community created successfully!');
+                } else {
+                    errorBanner.textContent = result.error || 'Failed to create community.';
+                    errorBanner.classList.remove('hidden');
+                }
+            } catch(err) {
+                errorBanner.textContent = 'Network error. Try again.';
+                errorBanner.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Group';
+            }
+        });
+
+        // Category tabs selection
+        document.querySelectorAll('.comm-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.comm-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                const cat = tab.getAttribute('data-category');
+                if (cat === 'all') {
+                    renderCommunities(loadedCommunities);
+                } else {
+                    const filtered = loadedCommunities.filter(c => c.category.toLowerCase() === cat.toLowerCase());
+                    renderCommunities(filtered);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
