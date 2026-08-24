@@ -1,6 +1,11 @@
 /* Orvyn JavaScript — Global Core Controller & PWA Manager */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Lucide Icons globally
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+    
     // 1. Register Service Worker
     registerServiceWorker();
     

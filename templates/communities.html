@@ -353,6 +353,9 @@
                     result.posts.forEach(p => {
                         commFeedWrapper.appendChild(createPostCardElement(p));
                     });
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
                 }
             } catch(e) {
                 commFeedWrapper.innerHTML = '<p class="error-msg">Error loading posts feed.</p>';

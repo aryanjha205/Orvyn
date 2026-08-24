@@ -194,7 +194,7 @@ def get_feed():
     # If For You didn't yield enough posts, pad it with latest public posts
     if feed_type == 'for_you' and len(posts) < 5:
         existing_ids = [p['_id'] for p in posts]
-        pad_posts = list(db.posts.find({'_id': {'$notin': existing_ids}}).sort('created_at', -1).limit(limit - len(posts)))
+        pad_posts = list(db.posts.find({'_id': {'$nin': existing_ids}}).sort('created_at', -1).limit(limit - len(posts)))
         posts.extend(pad_posts)
         
     enriched = enrich_posts(db, posts, current_user_id)
