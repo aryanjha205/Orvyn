@@ -455,8 +455,7 @@ async function fetchAiReplySuggestions() {
             row.classList.remove('hidden');
             container.innerHTML = '';
             
-            // Split up lines or generate variations
-            const replies = [result.result, "Thanks for the feedback! 👍", "I appreciate you checking it out! 😊"];
+            const replies = Array.isArray(result.result) ? result.result : [result.result];
             
             replies.forEach(reply => {
                 const chip = document.createElement('div');

@@ -435,32 +435,13 @@ async function searchUsersForChat() {
     }
     
     try {
-        // Query discover users
-        const response = await fetch(`/api/feed?type=trending&limit=20`);
+        const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}&limit=12`);
         const result = await response.json();
         
         if (result.success) {
             box.classList.remove('hidden');
             box.innerHTML = '';
-            
-            // Extract distinct author profiles that match search text
-            const list = [];
-            const ids = new Set();
-            result.posts.forEach(p => {
-                if (!ids.has(p.author.id) && (p.author.name.toLowerCase().includes(query.toLowerCase()) || p.author.username.toLowerCase().includes(query.toLowerCase()))) {
-                    ids.add(p.author.id);
-                    list.push(p.author);
-                }
-            });
-            
-            // Add fallback demo users if list is empty
-            if (list.length === 0) {
-                const demoUsers = [
-                    { id: 'aarav', name: 'Aarav Mehta', username: 'aarav.dev', profile_image: '/static/images/default-avatar.png' },
-                    { id: 'diya', name: 'Diya Sharma', username: 'diya.live', profile_image: '/static/images/default-avatar.png' }
-                ].filter(u => u.name.toLowerCase().includes(query.toLowerCase()) || u.username.toLowerCase().includes(query.toLowerCase()));
-                list.push(...demoUsers);
-            }
+            const list = result.users || [];
             
             if (list.length === 0) {
                 box.innerHTML = '<div style="padding:10px; font-size:12px; color:var(--text-secondary);">No profiles found.</div>';

@@ -511,6 +511,38 @@ def repost_post(post_id):
     })
 
 # Profiles & Follow Network
+@api_bp.route('/api/users/search', methods=['GET'])
+@login_required
+def search_users():
+    """Search actual registered users for discovery and direct messaging."""
+    db = get_db()
+    current_user_id = session.get('user_id')
+    query = request.args.get('q', '').strip()
+    limit = min(max(int(request.args.get('limit', 8)), 1), 30)
+
+    criteria = {'_id': {'$ne': ObjectId(current_user_id)}}
+    if query:
+        escaped = re.escape(query)
+        criteria['$or'] = [
+            {'name': {'$regex': escaped, '$options': 'i'}},
+            {'username': {'$regex': escaped, '$options': 'i'}},
+            {'bio': {'$regex': escaped, '$options': 'i'}}
+        ]
+
+    users = list(db.users.find(criteria, {'password_hash': 0}).sort('created_at', -1).limit(limit))
+    results = []
+    for user in users:
+        user_id = str(user['_id'])
+        results.append({
+            'id': user_id,
+            'name': user.get('name', 'Orvyn member'),
+            'username': user.get('username', ''),
+            'profile_image': user.get('profile_image', '/static/images/default-avatar.png'),
+            'bio': user.get('bio', ''),
+            'is_following': db.follows.find_one({'follower_id': current_user_id, 'following_id': user_id}) is not None
+        })
+    return jsonify({'success': True, 'users': results})
+
 @api_bp.route('/api/users/<username>', methods=['GET'])
 @login_required
 def get_user_profile(username):

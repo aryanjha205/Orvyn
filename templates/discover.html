@@ -129,8 +129,8 @@
                 const response = await fetch(`/api/communities?q=${encodeURIComponent(query)}`);
                 const commData = await response.json();
                 
-                // Let's search posts using our search indexing
-                const feedResponse = await fetch(`/api/feed?type=trending&limit=15`); // Fetch trending posts for simulation
+                // Search posts currently visible in the network.
+                const feedResponse = await fetch(`/api/feed?type=trending&limit=15`);
                 const feedData = await feedResponse.json();
                 
                 // Let's filter posts that contain search query
@@ -139,14 +139,9 @@
                     p.hashtags.some(h => h.toLowerCase().includes(query.toLowerCase()))
                 );
                 
-                // Let's search users: get suggested profiles and filter
-                const usersResponse = await fetch('/api/feed?type=for_you&limit=10'); // Fetch users indirectly or show recommendations
-                // We'll query users list via dummy lookup
-                const users = [
-                    { id: '1', name: 'Aarav Mehta', username: 'aarav.dev', profile_image: '/static/images/default-avatar.png', bio: 'AI researcher and web developer.' },
-                    { id: '2', name: 'Diya Sharma', username: 'diya.live', profile_image: '/static/images/default-avatar.png', bio: 'Creative designer making clean UIs.' },
-                    { id: '3', name: 'Kabir Dev', username: 'kabir.build', profile_image: '/static/images/default-avatar.png', bio: 'Building agents with Python and MongoDB.' }
-                ].filter(u => u.name.toLowerCase().includes(query.toLowerCase()) || u.username.toLowerCase().includes(query.toLowerCase()) || u.bio.toLowerCase().includes(query.toLowerCase()));
+                const usersResponse = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+                const usersData = await usersResponse.json();
+                const users = usersData.success ? usersData.users : [];
 
                 spinner.classList.add('hidden');
                 renderSearchResults(query, users, filteredPosts, commData.communities || []);
@@ -302,27 +297,22 @@
                     });
                 }
 
-                // Suggested Creators
+                // Suggested creators from actual registered accounts.
                 const suggestContainer = document.getElementById('suggested-users-container');
                 if (suggestContainer) {
-                    suggestContainer.innerHTML = `
+                    const usersResponse = await fetch('/api/users/search?limit=5');
+                    const usersData = await usersResponse.json();
+                    const users = usersData.success ? usersData.users : [];
+                    suggestContainer.innerHTML = users.length ? users.map(u => `
                         <div class="suggested-user-row">
-                            <img src="/static/images/default-avatar.png" alt="Aarav">
-                            <div class="user-info" onclick="window.location.href='/profile/aarav.dev'">
-                                <span class="name">Aarav Mehta</span>
-                                <span class="handle">@aarav.dev</span>
+                            <img src="${u.profile_image}" alt="${u.name}">
+                            <div class="user-info" onclick="window.location.href='/profile/${u.username}'">
+                                <span class="name">${u.name}</span>
+                                <span class="handle">@${u.username}</span>
                             </div>
-                            <button class="s-follow-btn" onclick="followSuggestUser(this, 'aarav')">Follow</button>
+                            <button class="s-follow-btn ${u.is_following ? 'following' : ''}" onclick="followSuggestUser(this, '${u.id}')">${u.is_following ? 'Following' : 'Follow'}</button>
                         </div>
-                        <div class="suggested-user-row">
-                            <img src="/static/images/default-avatar.png" alt="Diya">
-                            <div class="user-info" onclick="window.location.href='/profile/diya.live'">
-                                <span class="name">Diya Sharma</span>
-                                <span class="handle">@diya.live</span>
-                            </div>
-                            <button class="s-follow-btn" onclick="followSuggestUser(this, 'diya')">Follow</button>
-                        </div>
-                    `;
+                    `).join('') : '<div class="empty-state">No creators to suggest yet.</div>';
                 }
             } catch(e) {
                 console.error(e);
@@ -331,9 +321,22 @@
 
         // Toggles in page
         window.followSearchUser = async (btn, id) => {
-            btn.disabled = true;
-            btn.textContent = 'Following';
-            btn.classList.add('joined');
+            const following = btn.classList.contains('joined');
+            const response = await fetch(`/api/users/${id}/follow`, { method: following ? 'DELETE' : 'POST' });
+            const result = await response.json();
+            if (response.ok && result.success) {
+                btn.textContent = following ? 'Follow' : 'Following';
+                btn.classList.toggle('joined', !following);
+            }
+        };
+        window.followSuggestUser = async (btn, id) => {
+            const following = btn.classList.contains('following');
+            const response = await fetch(`/api/users/${id}/follow`, { method: following ? 'DELETE' : 'POST' });
+            const result = await response.json();
+            if (response.ok && result.success) {
+                btn.textContent = following ? 'Follow' : 'Following';
+                btn.classList.toggle('following', !following);
+            }
         };
         window.joinSearchComm = async (btn, id) => {
             btn.disabled = true;

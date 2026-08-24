@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session
 from services.db import get_db
-from utils.security import hash_password, check_password, is_valid_email, is_valid_username
+from utils.security import hash_password, check_password, is_valid_email, is_valid_username, login_required
 from services.storage_service import save_uploaded_file
 from bson import ObjectId
 import datetime
@@ -152,6 +152,54 @@ def logout():
     return jsonify({
         'success': True,
         'message': 'Logged out successfully!'
+    }), 200
+
+@auth_bp.route('/api/auth/profile', methods=['POST'])
+@login_required
+def update_profile():
+    """Update the signed-in user's editable profile fields and images."""
+    db = get_db()
+    user_id = session.get('user_id')
+    user = db.users.find_one({'_id': ObjectId(user_id)})
+    if not user:
+        return jsonify({'error': 'User not found.'}), 404
+
+    updates = {}
+    for field in ('name', 'bio', 'location', 'website'):
+        if field in request.form:
+            updates[field] = request.form.get(field, '').strip()
+
+    if 'name' in updates and not updates['name']:
+        return jsonify({'error': 'Your name cannot be empty.'}), 400
+
+    for upload_field, stored_field in (('profile_image', 'profile_image'), ('cover_image', 'cover_image')):
+        image = request.files.get(upload_field)
+        if image and image.filename:
+            try:
+                updates[stored_field] = save_uploaded_file(image, user_id, 'image')
+            except Exception as e:
+                return jsonify({'error': f'Image upload failed: {str(e)}'}), 400
+
+    if not updates:
+        return jsonify({'error': 'No profile changes were provided.'}), 400
+
+    updates['updated_at'] = datetime.datetime.utcnow()
+    db.users.update_one({'_id': user['_id']}, {'$set': updates})
+    if 'name' in updates:
+        session['name'] = updates['name']
+
+    updated_user = db.users.find_one({'_id': user['_id']})
+    return jsonify({
+        'success': True,
+        'message': 'Profile updated successfully.',
+        'user': {
+            'name': updated_user.get('name'),
+            'bio': updated_user.get('bio', ''),
+            'location': updated_user.get('location', ''),
+            'website': updated_user.get('website', ''),
+            'profile_image': updated_user.get('profile_image', '/static/images/default-avatar.png'),
+            'cover_image': updated_user.get('cover_image', '/static/images/default-cover.png')
+        }
     }), 200
 
 @auth_bp.route('/api/auth/forgot-password', methods=['POST'])

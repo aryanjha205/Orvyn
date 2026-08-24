@@ -181,38 +181,30 @@ async function toggleProfileFollow() {
 // Upload Cover or Avatar
 async function uploadProfileMedia(file, type) {
     if (!file) return;
-    
     showToast(`Uploading profile ${type}...`);
-    
     const formData = new FormData();
-    // Use register endpoint syntax to simulate update or write helper
     formData.append(type === 'avatar' ? 'profile_image' : 'cover_image', file);
-    formData.append('name', CURRENT_USER.name);
-    
-    // We will update the user model via a quick POST or write a user updater route.
-    // Let's create an endpoint in routes/auth.py or write a direct database saver.
-    // For simplicity, let's reuse auth endpoint if it supports updates, or create a mock.
-    // Since we want everything fully working, let's write a settings update endpoint or helper.
-    // Let's assume we can POST to /api/auth/register with update query. Wait, register is only for new users.
-    // Let's implement profile photo updating in routes/auth.py or views!
-    // Wait, let's double check if we need to write a settings updater API. Yes, let's look at views/api blueprints.
-    // I can add a route for updating user details. I did settings save, but settings save was password reset.
-    // Let's write a profile updater API in api.py!
-    // But since the user is in planning execution, wait, I can edit api.py to support user details updates!
-    // Yes! Let's do that in a bit or let's perform a settings profile updates fetch.
-    
-    // Let's simulate local UI update immediately so it looks extremely premium
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    try {
+        const response = await fetch('/api/auth/profile', { method: 'POST', body: formData });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Unable to update your profile image.');
+        }
+
         if (type === 'avatar') {
-            document.querySelector('.profile-main-avatar').src = e.target.result;
-            document.querySelector('.header-user-avatar').src = e.target.result;
+            document.querySelectorAll('.profile-main-avatar, .header-user-avatar').forEach(image => {
+                image.src = result.user.profile_image;
+            });
         } else {
-            document.querySelector('.cover-image-container').style.backgroundImage = `url('${e.target.result}')`;
+            const cover = document.querySelector('.cover-image-container');
+            cover.style.backgroundImage = `url('${result.user.cover_image}')`;
+            cover.setAttribute('data-cover', result.user.cover_image);
         }
         showToast(`Profile ${type} updated!`);
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || `Could not update profile ${type}.`);
+    }
 }
 
 // Regenerate AI Summary Bio

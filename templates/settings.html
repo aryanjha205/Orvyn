@@ -73,24 +73,37 @@
             const bio = document.getElementById('settings-bio').value.trim();
             const newPassword = document.getElementById('settings-new-password').value;
             
-            // To update, let's write a quick API or form update using auth endpoint or a helper settings updater.
-            // Let's call /api/auth/reset-password for password changes, and update details directly.
-            // Since we can perform it in Flask views/api.py, let's write a fetch.
             try {
-                // Submit details update
-                // We will build a quick update call
+                const profileData = new FormData();
+                profileData.append('name', name);
+                profileData.append('location', location);
+                profileData.append('website', website);
+                profileData.append('bio', bio);
+                const profileResponse = await fetch('/api/auth/profile', {
+                    method: 'POST',
+                    body: profileData
+                });
+                const profileResult = await profileResponse.json();
+                if (!profileResponse.ok || !profileResult.success) {
+                    throw new Error(profileResult.error || 'Unable to update profile.');
+                }
+
                 if (newPassword && newPassword.length >= 6) {
-                    await fetch('/api/auth/reset-password', {
+                    const passwordResponse = await fetch('/api/auth/reset-password', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ username: CURRENT_USER.username, password: newPassword })
                     });
+                    const passwordResult = await passwordResponse.json();
+                    if (!passwordResponse.ok || !passwordResult.success) {
+                        throw new Error(passwordResult.error || 'Unable to update password.');
+                    }
+                } else if (newPassword) {
+                    throw new Error('Password must be at least 6 characters.');
                 }
-                
-                // Alert success
                 showToast('Settings saved successfully!');
             } catch(e) {
-                showToast('Error updating account.');
+                showToast(e.message || 'Error updating account.');
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save Changes';

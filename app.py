@@ -7,7 +7,6 @@ from routes.auth import auth_bp
 from routes.api import api_bp
 from routes.ai import ai_bp
 from routes.views import views_bp
-from utils.security import hash_password
 from PIL import Image, ImageDraw
 
 def create_app():
@@ -52,10 +51,9 @@ def create_app():
         # Fallback to serving from /tmp in read-only environments
         return send_from_directory('/tmp', filename)
 
-    # 4. Database Initialization & Seeding
+    # 4. Database initialization. Content is always created by real users.
     try:
-        db = init_db()
-        seed_database_if_empty(db)
+        init_db()
     except Exception as e:
         app.logger.error(f"Database initialization failed: {e}")
 

@@ -298,8 +298,6 @@ function createPostCardElement(post) {
                 <div class="author-meta-box">
                     <span class="name-label">
                         ${post.author.name}
-                        <!-- Diya Sharma and verified user simulation checkmarks -->
-                        ${post.author.username === 'diya.live' || post.author.username === 'aarav.dev' ? '<i data-lucide="check-circle" class="verified-checkmark"></i>' : ''}
                     </span>
                     <span class="handle-label">@${post.author.username}</span>
                 </div>
