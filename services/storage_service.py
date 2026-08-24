@@ -23,10 +23,16 @@ def save_uploaded_file(file, user_id: str, file_type: str = 'image') -> str:
     if not file or file.filename == '':
         return None
 
-    # Check directories
-    upload_dir = Config.UPLOAD_FOLDER
+    # Check directories - route to writeable /tmp on Vercel serverless environments
+    is_vercel = os.environ.get('VERCEL') == '1'
+    upload_dir = '/tmp' if is_vercel else Config.UPLOAD_FOLDER
+    
     if not os.path.exists(upload_dir):
-        os.makedirs(upload_dir, exist_ok=True)
+        try:
+            os.makedirs(upload_dir, exist_ok=True)
+        except Exception:
+            upload_dir = '/tmp'
+            os.makedirs(upload_dir, exist_ok=True)
 
     filename = secure_filename(file.filename)
     ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''

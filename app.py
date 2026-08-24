@@ -15,12 +15,15 @@ def create_app():
     app.config.from_object(Config)
 
     # Ensure Uploads Directory exists
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    os.makedirs(os.path.join(app.root_path, 'static', 'images'), exist_ok=True)
-    os.makedirs(os.path.join(app.root_path, 'static', 'icons'), exist_ok=True)
-
-    # 1. Generate Placeholder assets if missing
-    generate_placeholder_assets(app.root_path)
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        os.makedirs(os.path.join(app.root_path, 'static', 'images'), exist_ok=True)
+        os.makedirs(os.path.join(app.root_path, 'static', 'icons'), exist_ok=True)
+        
+        # 1. Generate Placeholder assets if missing
+        generate_placeholder_assets(app.root_path)
+    except Exception as e:
+        app.logger.warning(f"Skipping folder creation/placeholders in read-only environment: {e}")
 
     # 2. Connect Blueprints
     app.register_blueprint(auth_bp)
@@ -39,6 +42,15 @@ def create_app():
     @app.route('/manifest.json')
     def manifest():
         return send_from_directory(os.path.join(app.root_path, 'pwa'), 'manifest.json')
+
+    # Serve static uploads, falling back to /tmp/ for serverless environments
+    @app.route('/static/uploads/<filename>')
+    def serve_upload(filename):
+        local_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if os.path.exists(local_path):
+            return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+        # Fallback to serving from /tmp in read-only environments
+        return send_from_directory('/tmp', filename)
 
     # 4. Database Initialization & Seeding
     try:
