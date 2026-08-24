@@ -8,6 +8,7 @@ from routes.api import api_bp
 from routes.ai import ai_bp
 from routes.views import views_bp
 from PIL import Image, ImageDraw
+from utils.security import hash_password
 
 def create_app():
     app = Flask(__name__)
@@ -53,7 +54,8 @@ def create_app():
 
     # 4. Database initialization. Content is always created by real users.
     try:
-        init_db()
+        db = init_db()
+        seed_database_if_empty(db)
     except Exception as e:
         app.logger.error(f"Database initialization failed: {e}")
 

@@ -1,6 +1,6 @@
 /* Orvyn Stylesheet — Design Token System & Layout Core */
 
-:root {
+:root, [data-theme="light"] {
     --parrot-green: #72C924;
     --bright-pink: #F52887;
     --bg-primary: #FFFFFF;
@@ -20,6 +20,60 @@
     --border-radius-md: 16px;
     --border-radius-lg: 24px;
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(228, 230, 235, 0.8);
+    --nav-active-bg: rgba(114, 201, 36, 0.08);
+    --shadow-glow: 0 0 20px rgba(114, 201, 36, 0.15);
+}
+
+[data-theme="dark"] {
+    --bg-primary: #0F1115;
+    --bg-secondary: #171A21;
+    --text-primary: #F3F4F6;
+    --text-secondary: #9CA3AF;
+    --border-color: #2D3139;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --glass-bg: rgba(23, 26, 33, 0.75);
+    --glass-border: rgba(45, 49, 57, 0.8);
+    --nav-active-bg: rgba(114, 201, 36, 0.15);
+    --shadow-glow: 0 0 20px rgba(114, 201, 36, 0.25);
+}
+
+/* Global Theme Toggle Button Styling */
+.theme-toggle-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+.theme-toggle-btn:hover {
+    background-color: var(--nav-active-bg);
+    transform: scale(1.05);
+}
+/* Show/hide sun/moon based on theme */
+[data-theme="dark"] .theme-toggle-btn .sun-icon {
+    display: block;
+    color: #FBBF24;
+}
+[data-theme="dark"] .theme-toggle-btn .moon-icon {
+    display: none;
+}
+[data-theme="light"] .theme-toggle-btn .sun-icon {
+    display: none;
+}
+[data-theme="light"] .theme-toggle-btn .moon-icon {
+    display: block;
+    color: #6366F1;
 }
 
 /* Base resets & styles */
@@ -72,10 +126,10 @@ textarea, input, select {
 
 /* Global App Header */
 .app-header {
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: var(--glass-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--glass-border);
     position: fixed;
     top: 0;
     left: 0;
@@ -129,13 +183,14 @@ textarea, input, select {
     border-radius: 30px;
     padding: 8px 16px 8px 40px;
     font-size: 14px;
+    color: var(--text-primary);
     transition: var(--transition-smooth);
 }
 
 .header-search-bar input:focus {
     border-color: var(--parrot-green);
     background-color: var(--bg-primary);
-    box-shadow: 0 0 0 3px rgba(114, 201, 36, 0.15);
+    box-shadow: 0 0 15px var(--shadow-glow);
 }
 
 /* Header Actions */
@@ -235,7 +290,7 @@ textarea, input, select {
 }
 
 .sidebar-item:hover, .sidebar-item.active {
-    background-color: rgba(114, 201, 36, 0.08);
+    background-color: var(--nav-active-bg);
     color: var(--parrot-green);
 }
 
@@ -284,7 +339,7 @@ textarea, input, select {
     align-items: center;
     gap: 12px;
     padding: 12px;
-    background-color: white;
+    background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
     margin-top: auto;
@@ -358,7 +413,7 @@ textarea, input, select {
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid white;
+    border: 2px solid var(--bg-primary);
 }
 
 .story-card:hover .story-avatar-container {
@@ -392,7 +447,7 @@ textarea, input, select {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid white;
+    border: 2px solid var(--bg-primary);
 }
 .add-story-badge i {
     width: 12px;
@@ -401,7 +456,7 @@ textarea, input, select {
 
 /* Composer Card */
 .create-post-card {
-    background-color: white;
+    background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
     padding: 20px;
@@ -436,6 +491,8 @@ textarea, input, select {
     font-size: 16px;
     padding-top: 10px;
     min-height: 80px;
+    background: transparent;
+    color: var(--text-primary);
 }
 
 .ai-sparkle-badge {
@@ -609,6 +666,8 @@ textarea, input, select {
     padding: 8px 16px;
     border-radius: var(--border-radius-sm);
     font-size: 14px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .ai-action-button {
@@ -641,7 +700,8 @@ textarea, input, select {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
     padding: 6px 12px;
-    background-color: white;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
     font-size: 13px;
 }
 
@@ -778,8 +838,7 @@ textarea, input, select {
 .robot-head {
     width: 100px;
     height: 75px;
-    background-color: white;
-    border-radius: 40px;
+    background-color: var(--bg-primary);
     border: 6px solid var(--parrot-green);
     margin: 0 auto;
     position: relative;
@@ -818,7 +877,7 @@ textarea, input, select {
 .robot-body {
     width: 70px;
     height: 50px;
-    background-color: white;
+    background-color: var(--bg-primary);
     border-radius: 20px 20px 0 0;
     margin: -10px auto 0 auto;
     border: 5px solid var(--parrot-green);
@@ -891,7 +950,7 @@ textarea, input, select {
 
 /* Posts rendering cards */
 .post-card-wrapper {
-    background-color: white;
+    background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
     padding: 20px;
@@ -1058,10 +1117,11 @@ textarea, input, select {
     right: 20px;
     width: 350px;
     height: 480px;
-    background-color: white;
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(12px);
     border-radius: var(--border-radius-md);
     box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--glass-border);
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -1144,6 +1204,8 @@ textarea, input, select {
     border-radius: 30px;
     padding: 8px 16px;
     font-size: 13px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 .ai-chat-input-area button {
     background: var(--gradient-green);
@@ -1176,7 +1238,9 @@ textarea, input, select {
 }
 
 .modal-card {
-    background-color: white;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
     width: 100%;
     max-width: 500px;
     border-radius: var(--border-radius-md);
@@ -1235,6 +1299,8 @@ textarea, input, select {
     padding: 10px 14px;
     font-size: 14px;
     width: 100%;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
     transition: var(--transition-smooth);
 }
 .form-group input:focus, .form-group textarea:focus {
@@ -1270,7 +1336,7 @@ textarea, input, select {
     z-index: 3000;
 }
 .toast-msg {
-    background-color: var(--text-primary);
+    background-color: #1E293B;
     color: white;
     padding: 10px 20px;
     border-radius: 30px;
@@ -1300,7 +1366,7 @@ textarea, input, select {
 
 /* Skeletons loaders styles */
 .skeleton-post-card {
-    background-color: white;
+    background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
     padding: 20px;
@@ -1316,7 +1382,7 @@ textarea, input, select {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: #E4E6EB;
+    background-color: var(--border-color);
     animation: skeletonPulse 1.5s infinite;
 }
 .skeleton-meta {
@@ -1327,7 +1393,7 @@ textarea, input, select {
 }
 .skeleton-line {
     height: 12px;
-    background-color: #E4E6EB;
+    background-color: var(--border-color);
     border-radius: 4px;
     animation: skeletonPulse 1.5s infinite;
 }

@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        // Immediately load user's theme to avoid flash
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#72c924">
@@ -45,6 +50,10 @@
                 </div>
                 
                 <div class="header-actions">
+                    <button class="theme-toggle-btn" id="global-theme-toggle-btn" title="Toggle Theme">
+                        <i data-lucide="sun" class="sun-icon"></i>
+                        <i data-lucide="moon" class="moon-icon"></i>
+                    </button>
                     <div class="notification-bell-container" id="notif-bell-btn">
                         <i data-lucide="bell"></i>
                         <span class="notification-badge hidden" id="notif-badge-count">0</span>
@@ -184,6 +193,19 @@
             username: "{{ user.username }}",
             profile_image: "{{ user.profile_image or '/static/images/default-avatar.png' }}"
         };
+
+        // Theme Toggle Handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('global-theme-toggle-btn');
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', () => {
+                    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('theme', newTheme);
+                });
+            }
+        });
     </script>
     <script src="/static/js/app.js"></script>
     {% block scripts %}{% endblock %}
