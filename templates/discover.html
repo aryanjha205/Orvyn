@@ -59,34 +59,13 @@
         <div class="discover-sidebar">
             <!-- Trending tags card -->
             <div class="discover-card trending-topics-card">
-                <h3>Trending Tags</h3>
-                <div class="trending-list">
-                    <div class="trending-item" data-tag="ai">
-                        <span class="trending-tag">#ai</span>
-                        <span class="trending-volume">8.4k posts</span>
-                    </div>
-                    <div class="trending-item" data-tag="coding">
-                        <span class="trending-tag">#coding</span>
-                        <span class="trending-volume">5.2k posts</span>
-                    </div>
-                    <div class="trending-item" data-tag="webdev">
-                        <span class="trending-tag">#webdev</span>
-                        <span class="trending-volume">3.9k posts</span>
-                    </div>
-                    <div class="trending-item" data-tag="creative">
-                        <span class="trending-tag">#creative</span>
-                        <span class="trending-volume">2.1k posts</span>
-                    </div>
-                    <div class="trending-item" data-tag="orvyn">
-                        <span class="trending-tag">#Orvyn</span>
-                        <span class="trending-volume">1.8k posts</span>
-                    </div>
-                </div>
+                <h3 class="discover-card-title"><i data-lucide="trending-up"></i> Trending now</h3>
+                <div class="trending-list" id="trending-tags-container"></div>
             </div>
 
             <!-- People recommendations card -->
             <div class="discover-card people-recommendations-card">
-                <h3>Suggested Creators</h3>
+                <h3 class="discover-card-title"><i data-lucide="sparkles"></i> Suggested Creators</h3>
                 <div class="suggested-users-list" id="suggested-users-container">
                     <!-- Dynamic suggested users list -->
                 </div>
@@ -276,6 +255,25 @@
         // Suggested users & featured communities
         async function loadFeaturedData() {
             try {
+                const trendsResponse = await fetch('/api/trends');
+                const trendsData = await trendsResponse.json();
+                const trendsContainer = document.getElementById('trending-tags-container');
+                if (trendsContainer) {
+                    const trends = trendsData.success ? trendsData.trends : [];
+                    trendsContainer.innerHTML = trends.length ? trends.map(item => `
+                        <button class="trending-item" data-tag="${item.tag}">
+                            <span class="trending-tag">#${item.tag}</span>
+                            <span class="trending-volume">${item.count} ${item.count === 1 ? 'post' : 'posts'}</span>
+                        </button>
+                    `).join('') : '<div class="empty-state">Topics will appear as posts are shared.</div>';
+                    trendsContainer.querySelectorAll('.trending-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            searchInput.value = item.dataset.tag;
+                            performSearch(item.dataset.tag);
+                        });
+                    });
+                }
+
                 // Communities
                 const response = await fetch('/api/communities');
                 const commData = await response.json();

@@ -182,6 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok && result.success) {
                 previewBox.classList.remove('hidden');
                 previewText.textContent = result.result;
+                // Keep the generated copy in the main composer immediately so it is
+                // editable and can be posted without an extra, easy-to-miss step.
+                contentTextarea.value = result.result;
+                showToast('AI draft is ready to edit or post.');
             } else {
                 showToast(result.error);
             }

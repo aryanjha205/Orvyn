@@ -3,13 +3,18 @@
 {% block content %}
 <div class="settings-layout">
     <div class="settings-card">
-        <h2>Account Settings</h2>
-        <p class="settings-subtitle">Manage your profile details and preferences.</p>
+        <div class="settings-hero">
+            <div class="settings-hero-icon"><i data-lucide="settings-2"></i></div>
+            <div>
+                <h2>Account Settings</h2>
+                <p class="settings-subtitle">Manage your profile details and preferences.</p>
+            </div>
+        </div>
         
         <form id="profile-settings-form" class="settings-form">
             <!-- Basic Details -->
             <div class="settings-section">
-                <h3>Personal Information</h3>
+                <h3><i data-lucide="user-round"></i> Personal Information</h3>
                 
                 <div class="form-group">
                     <label for="settings-name">Full Name</label>
@@ -35,7 +40,7 @@
             
             <!-- Update Password -->
             <div class="settings-section">
-                <h3>Change Password</h3>
+                <h3><i data-lucide="shield-check"></i> Change Password</h3>
                 <div class="form-group">
                     <label for="settings-new-password">New Password</label>
                     <input type="password" id="settings-new-password" name="password" placeholder="Leave blank to keep current password">

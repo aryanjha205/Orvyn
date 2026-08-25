@@ -7,13 +7,17 @@ from config import Config
 logger = logging.getLogger(__name__)
 
 class AIService:
+    last_error = None
+
     @staticmethod
     def _call_openrouter(messages, model=None, response_format=None):
         """Helper to send requests to OpenRouter."""
         api_key = Config.OPENROUTER_API_KEY
         provider = Config.AI_PROVIDER
         
+        AIService.last_error = None
         if provider == 'mock' or not api_key:
+            AIService.last_error = "AI provider credentials are not configured."
             return None
             
         selected_model = model or Config.AI_MODEL
@@ -26,26 +30,32 @@ class AIService:
             "X-Title": "Orvyn PWA"
         }
         
-        data = {
-            "model": selected_model,
-            "messages": messages
-        }
-        
-        if response_format:
-            data["response_format"] = response_format
-            
-        try:
-            # Set a timeout of 10 seconds to ensure the page doesn't hang indefinitely
-            response = requests.post(url, headers=headers, json=data, timeout=12)
-            if response.status_code == 200:
-                result = response.json()
-                return result['choices'][0]['message']['content'].strip()
-            else:
-                logger.warning(f"OpenRouter API returned error code {response.status_code}: {response.text}")
-                return None
-        except Exception as e:
-            logger.error(f"Failed to communicate with OpenRouter API: {e}")
-            return None
+        models_to_try = [selected_model]
+        if selected_model != 'openrouter/free':
+            models_to_try.append('openrouter/free')
+
+        for candidate in models_to_try:
+            data = {"model": candidate, "messages": messages, "max_tokens": 420, "temperature": 0.7}
+            if response_format:
+                data["response_format"] = response_format
+            try:
+                response = requests.post(url, headers=headers, json=data, timeout=35)
+                if response.status_code == 200:
+                    result = response.json()
+                    content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+                    if content and content.strip():
+                        return content.strip()
+                    AIService.last_error = 'The AI provider returned an empty response.'
+                else:
+                    AIService.last_error = f'AI provider returned HTTP {response.status_code}.'
+                    logger.warning("OpenRouter request for %s failed with HTTP %s", candidate, response.status_code)
+            except requests.RequestException as e:
+                AIService.last_error = 'Unable to reach the AI provider. Check the server network connection.'
+                logger.error("OpenRouter request for %s failed: %s", candidate, e)
+            except (ValueError, KeyError, IndexError) as e:
+                AIService.last_error = 'The AI provider returned an invalid response.'
+                logger.error("OpenRouter response parsing failed: %s", e)
+        return None
 
     @classmethod
     def generate_post(cls, prompt: str, tone: str = "friendly", style: str = "engaging") -> str:
@@ -76,7 +86,7 @@ class AIService:
             "educational": f"Quick tip: When working on this - '{prompt}' - always remember to double-check database indexes. It saves querying time later! 💡 #CodingTips #WebDev",
             "friendly": f"Hey friends! Just wanted to share: {prompt}. Hope everyone is having a productive week! Let me know your thoughts on this! 😊👋"
         }
-        return mock_posts.get(tone.lower(), f"Just sharing a quick update: {prompt} ✨ #Orvyn #AI")
+        return ""
 
     @classmethod
     def improve_post(cls, draft: str, tone: str = "friendly") -> str:

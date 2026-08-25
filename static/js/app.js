@@ -380,8 +380,9 @@ async function repostPostAction(id) {
             const response = await fetch(`/api/posts/${id}/repost`, { method: 'POST' });
             const result = await response.json();
             if (response.ok && result.success) {
+                const countLabel = document.querySelector(`#post-${id} .action-btn-item:nth-child(3) .count`);
+                if (countLabel) countLabel.textContent = result.shares_count;
                 showToast('Reposted successfully! Check your profile feed.');
-                if (typeof loadFeed === 'function') loadFeed(); // Reload feed if on homepage
             } else {
                 showToast(result.error);
             }

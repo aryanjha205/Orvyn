@@ -5,6 +5,7 @@ from utils.security import login_required
 from bson import ObjectId
 import datetime
 import re
+from werkzeug.utils import secure_filename
 
 api_bp = Blueprint('api', __name__)
 
@@ -32,11 +33,13 @@ def enrich_posts(db, posts, current_user_id=None):
         author_id = p.get('author_id')
         author = user_map.get(author_id, {})
         
-        # Default counts
-        likes_count = p.get('likes_count', 0)
-        comments_count = p.get('comments_count', 0)
-        saves_count = p.get('saves_count', 0)
-        shares_count = p.get('shares_count', 0)
+        # Engagement totals are derived from their source collections, not from
+        # cached fields. This keeps every displayed count accurate even if old
+        # posts were imported with stale totals.
+        likes_count = db.likes.count_documents({'post_id': p_id})
+        comments_count = db.comments.count_documents({'post_id': p_id})
+        saves_count = db.saves.count_documents({'post_id': p_id})
+        shares_count = db.posts.count_documents({'is_repost': True, 'reposted_from': p_id})
         
         # Format timestamps
         created_at = p.get('created_at')
@@ -379,12 +382,10 @@ def like_post(post_id):
         # Send Notification
         add_notification(db, post['author_id'], 'like', current_user_id, post_id)
         
-    # Get updated count
-    post = db.posts.find_one({'_id': ObjectId(post_id)})
     return jsonify({
         'success': True,
         'liked': liked,
-        'likes_count': post.get('likes_count', 0)
+        'likes_count': db.likes.count_documents({'post_id': post_id})
     })
 
 @api_bp.route('/api/posts/<post_id>/comment', methods=['POST'])
@@ -422,6 +423,7 @@ def comment_post(post_id):
     
     return jsonify({
         'success': True,
+        'comments_count': db.comments.count_documents({'post_id': post_id}),
         'comment': {
             'id': str(result.inserted_id),
             'content': content,
@@ -460,11 +462,10 @@ def save_post(post_id):
         db.posts.update_one({'_id': ObjectId(post_id)}, {'$inc': {'saves_count': 1}})
         saved = True
         
-    post = db.posts.find_one({'_id': ObjectId(post_id)})
     return jsonify({
         'success': True,
         'saved': saved,
-        'saves_count': post.get('saves_count', 0)
+        'saves_count': db.saves.count_documents({'post_id': post_id})
     })
 
 @api_bp.route('/api/posts/<post_id>/repost', methods=['POST'])
@@ -507,10 +508,29 @@ def repost_post(post_id):
     
     return jsonify({
         'success': True,
-        'message': 'Reposted successfully!'
+        'message': 'Reposted successfully!',
+        'shares_count': db.posts.count_documents({'is_repost': True, 'reposted_from': post_id})
     })
 
 # Profiles & Follow Network
+@api_bp.route('/api/trends', methods=['GET'])
+@login_required
+def get_trends():
+    """Return live hashtag counts calculated from real posts."""
+    db = get_db()
+    pipeline = [
+        {'$unwind': '$hashtags'},
+        {'$group': {'_id': {'$toLower': '$hashtags'}, 'count': {'$sum': 1}}},
+        {'$sort': {'count': -1, '_id': 1}},
+        {'$limit': 8}
+    ]
+    tags = [
+        {'tag': item['_id'].lstrip('#'), 'count': item['count']}
+        for item in db.posts.aggregate(pipeline)
+        if item.get('_id')
+    ]
+    return jsonify({'success': True, 'trends': tags})
+
 @api_bp.route('/api/users/search', methods=['GET'])
 @login_required
 def search_users():
@@ -875,9 +895,10 @@ def create_community():
         
     # Community image upload
     image_url = '/static/images/default-community.png'
-    if 'image' in request.files:
+    image_file = request.files.get('image')
+    if image_file and image_file.filename:
         try:
-            image_url = save_uploaded_file(request.files['image'], 'comm_' + secure_filename(name), 'image')
+            image_url = save_uploaded_file(image_file, 'comm_' + secure_filename(name), 'image')
         except Exception as e:
             return jsonify({'error': f"Image upload failed: {str(e)}"}), 400
             

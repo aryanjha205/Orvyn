@@ -20,6 +20,8 @@ def ai_write():
         return jsonify({'error': 'A prompt idea is required.'}), 400
         
     generated = AIService.generate_post(prompt, tone, style)
+    if not generated:
+        return jsonify({'error': AIService.last_error or 'The AI writer is temporarily unavailable. Please try again.'}), 503
     return jsonify({
         'success': True,
         'result': generated

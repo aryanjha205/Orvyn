@@ -1208,3 +1208,98 @@ body {
     #comment-modal { align-items: center; }
     #comment-modal .modal-card { border-radius: 22px; }
 }
+
+/* Discover sidebar: compact, useful creator and live-trend cards. */
+.discover-card-title { display: flex; align-items: center; gap: 7px; }
+.discover-card-title svg { width: 16px; color: var(--bright-pink); }
+.trending-item { display: flex; justify-content: space-between; width: 100%; padding: 9px 0; border-bottom: 1px solid #f0f2f3; text-align: left; }
+.suggested-user-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 9px 0; border-bottom: 1px solid #f0f2f3; }
+.suggested-user-row:last-child { border-bottom: 0; }
+.suggested-user-row > img { width: 36px; height: 36px; object-fit: cover; border-radius: 50%; box-shadow: 0 2px 7px rgba(32,40,52,.12); }
+.suggested-user-row .user-info { min-width: 0; cursor: pointer; }
+.suggested-user-row .name, .suggested-user-row .handle { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suggested-user-row .name { color: #313841; font-size: 12px; font-weight: 800; }
+.suggested-user-row .handle { margin-top: 1px; color: #89919b; font-size: 10px; }
+.s-follow-btn { padding: 6px 9px; border-radius: 9px; color: var(--bright-pink); background: #fff0f7; font-size: 10px; font-weight: 800; }
+.s-follow-btn.following { color: #5f9f20; background: #f0fae8; }
+.empty-state { padding: 13px 0; color: #89919a; font-size: 12px; line-height: 1.45; }
+
+/* A compact publish action keeps the composer useful at every screen size. */
+.post-card-actions { align-items: center; flex-direction: row; }
+.post-media-triggers { width: auto; flex: 1; justify-content: flex-start; gap: 18px; }
+.publish-post-btn { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; min-width: 52px; min-height: 30px; padding: 6px 10px; border-radius: 10px; color: #fff; background: var(--gradient-primary); font-size: 11px; font-weight: 800; box-shadow: 0 4px 10px rgba(245,40,135,.18); }
+.publish-post-btn:disabled { opacity: .65; }
+
+/* Lucide replaces <i> with <svg>, so position the header icon after icon hydration. */
+@media screen and (min-width: 768px) {
+    .header-search-bar { position: relative; display: block; height: 44px; }
+    .header-search-bar > i,
+    .header-search-bar > svg {
+        position: absolute;
+        z-index: 1;
+        left: 14px;
+        top: 50%;
+        width: 18px;
+        height: 18px;
+        color: #68717c;
+        pointer-events: none;
+        transform: translateY(-50%);
+    }
+    .header-search-bar input { display: block; height: 44px; padding: 0 16px 0 42px; }
+}
+
+/* Prevent inherited mobile composer styles from stretching Post on wide screens. */
+.post-card-actions .publish-post-btn {
+    display: inline-flex !important;
+    width: 54px !important;
+    min-width: 54px !important;
+    max-width: 54px !important;
+    min-height: 31px !important;
+    height: 31px;
+    padding: 0 8px !important;
+    margin: 0 !important;
+    align-self: center !important;
+    border-radius: 10px !important;
+    font-size: 11px !important;
+}
+
+/* Use the same friendly robot mascot in the floating AI entry point. */
+.ai-assistant-trigger { overflow: hidden; padding: 3px; background: #fff; border: 2px solid rgba(114,201,36,.75); }
+.ai-bot-avatar-img { width: 100%; height: 100%; object-fit: cover; object-position: center 36%; border-radius: 50%; }
+.ai-pulse-ring { border-color: var(--bright-pink); }
+
+/* Community directory and creation sheet */
+.communities-grid-wrapper > h3 { font-family: var(--font-heading); font-size: 18px; margin: 6px 0 14px; }
+.community-card-item { transition: transform .2s ease, box-shadow .2s ease; cursor: pointer; }
+.community-card-item:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(31,42,53,.11); }
+.card-image-box { display: grid; height: 96px; place-items: center; background: linear-gradient(125deg, #effbe6, #fff1f8); }
+.card-image-box img { width: 64px; height: 64px; padding: 3px; object-fit: cover; border: 2px solid #fff; border-radius: 20px; box-shadow: 0 6px 16px rgba(45,55,66,.14); }
+.card-content-box { padding: 13px; }.card-content-box h4 { font-family: var(--font-heading); font-size: 15px; }.card-content-box p { min-height: 31px; }
+.c-footer { margin-top: 12px; }.c-action-btn { padding: 5px 9px; border-radius: 9px; color: #fff !important; background: var(--gradient-primary); font-size: 10px !important; }.c-action-btn.joined { color: #5c9d1c !important; background: #edf9e5; }
+
+#create-comm-modal { padding: 16px; align-items: center; }
+#create-comm-modal .modal-card { width: min(100%, 510px); height: min(90vh, 760px); max-height: min(90vh, 760px); border-radius: 26px; overflow: hidden; }
+#create-comm-modal form { display: flex; flex: 1; min-height: 0; flex-direction: column; overflow: hidden; }
+#create-comm-modal .modal-header { align-items: flex-start; padding: 20px 22px 16px; background: linear-gradient(112deg, #fff2f8, #f1fbe9); }
+#create-comm-modal .modal-header h3 { font-family: var(--font-heading); font-size: 21px; }
+.community-modal-subtitle { max-width: 330px; margin-top: 4px; color: #707985; font-size: 12px; line-height: 1.45; }
+#create-comm-modal .modal-body { flex: 1; min-height: 0; padding: 18px 22px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+#create-comm-modal .modal-footer { flex: 0 0 auto; padding: 13px 22px 19px; background: #fff; }
+.align-center { align-items: center; text-align: center; }.comm-image-upload-preview { position: relative; width: 84px; height: 84px; margin: 0 auto 7px; }
+.comm-image-upload-preview img { width: 100%; height: 100%; padding: 3px; object-fit: cover; border: 2px solid #fff; border-radius: 25px; background: linear-gradient(135deg, #80d030, #f52a87); box-shadow: 0 7px 18px rgba(40,50,61,.14); }
+.comm-upload-badge { position: absolute; right: -5px; bottom: -5px; display: grid; width: 31px; height: 31px; place-items: center; color: #fff; border: 2px solid #fff; border-radius: 50%; background: var(--bright-pink); cursor: pointer; }.comm-upload-badge svg { width: 15px; }
+#create-comm-modal .form-group { margin-bottom: 13px; }.btn-secondary { padding: 10px 14px; border-radius: 11px; color: #616a75; background: #f2f4f5; font-size: 12px; font-weight: 700; }.btn-primary { min-height: 39px; border-radius: 11px; font-size: 12px; }
+
+/* Account settings: calm, clear, and consistent with the rest of Orvyn. */
+.settings-layout { padding-top: 2px; }
+.settings-card { overflow: hidden; padding: 0; border: 1px solid #e6eaed; border-radius: 26px; background: #fff; }
+.settings-hero { display: flex; align-items: center; gap: 13px; padding: 22px; background: linear-gradient(115deg, #fff1f8, #fff 48%, #effbe8); border-bottom: 1px solid #edf0f2; }
+.settings-hero-icon { display: grid; width: 43px; height: 43px; flex: 0 0 auto; place-items: center; color: #fff; border-radius: 14px; background: var(--gradient-primary); box-shadow: 0 6px 14px rgba(245,40,135,.22); }
+.settings-hero-icon svg { width: 21px; }.settings-hero h2 { margin: 0; font-family: var(--font-heading); font-size: 23px; }.settings-hero .settings-subtitle { margin: 2px 0 0; color: #707985; font-size: 12px; }
+.settings-form { padding: 4px 22px 22px; }.settings-section { position: relative; padding: 20px 0; margin: 0; border-bottom: 1px solid #edf0f2; }
+.settings-section h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 15px; color: #252b32; font-family: var(--font-heading); font-size: 16px; }.settings-section h3 svg { width: 17px; color: var(--bright-pink); }
+.settings-form .form-group { gap: 7px; margin-bottom: 13px; }.settings-form .form-group label { color: #59626d; font-size: 12px; font-weight: 750; }
+.settings-form .form-group input, .settings-form .form-group textarea { border: 1px solid #e1e6e9; border-radius: 13px; background: #fafbfc; padding: 11px 13px; font-size: 13px; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+.settings-form .form-group textarea { min-height: 92px; resize: vertical; }.settings-form .form-group input:focus, .settings-form .form-group textarea:focus { border-color: rgba(245,40,135,.65); background: #fff; box-shadow: 0 0 0 4px rgba(245,40,135,.08); }
+.settings-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 20px; }.settings-save-btn { min-height: 41px; border-radius: 12px; font-size: 12px; }.settings-logout-btn { padding: 9px 6px; color: #d64b63; font-size: 12px; font-weight: 750; }.settings-logout-btn:hover { color: #b8223f; text-decoration: underline; }
+@media screen and (max-width: 480px) { .settings-hero, .settings-form { padding-left: 16px; padding-right: 16px; }.settings-hero h2 { font-size: 20px; } }

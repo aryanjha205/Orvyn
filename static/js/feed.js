@@ -111,6 +111,9 @@ async function loadFeed() {
     
     try {
         const response = await fetch(`/api/feed?type=${currentFeedTab}&page=${feedPage}&limit=6`);
+        if (!response.ok) {
+            throw new Error(`Feed request failed with HTTP ${response.status}`);
+        }
         const result = await response.json();
         
         if (skeleton) skeleton.classList.add('hidden');
@@ -149,8 +152,14 @@ async function loadFeed() {
         }
     } catch(err) {
         console.error(err);
+        if (skeleton) skeleton.classList.add('hidden');
+        if (spinner) spinner.classList.add('hidden');
+        if (feedPage === 1 && wrapper && wrapper.children.length <= 1) {
+            wrapper.innerHTML = '<div class="no-posts">Unable to load the feed right now. Please refresh and try again.</div>';
+        }
         showToast('Error connecting to feed network.');
     } finally {
+        if (spinner) spinner.classList.add('hidden');
         loadingFeed = false;
     }
 }
@@ -571,10 +580,11 @@ async function submitComment() {
             // Reload comments list
             openCommentModal(activeCommentPostId);
             
-            // Update comments count on main page post card
+            // Use the server's authoritative count rather than incrementing a
+            // potentially stale value rendered earlier.
             const countBtn = document.querySelector(`#post-${activeCommentPostId} .action-btn-item:nth-child(2) .count`);
             if (countBtn) {
-                countBtn.textContent = parseInt(countBtn.textContent) + 1;
+                countBtn.textContent = result.comments_count;
             }
         }
     } catch(e) {
