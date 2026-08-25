@@ -411,3 +411,24 @@ async function deleteOrReportPost(post_id, author_id) {
         }
     }
 }
+
+// Global Image Fallback Handler for broken avatar and media assets
+window.addEventListener('error', function(e) {
+    if (e.target && e.target.tagName === 'IMG') {
+        const src = e.target.getAttribute('src');
+        if (src && src !== '/static/images/default-avatar.png') {
+            if (e.target.classList.contains('header-user-avatar') || 
+                e.target.classList.contains('post-composer-avatar') || 
+                e.target.closest('.story-avatar-container') ||
+                e.target.closest('.sidebar-footer-profile') ||
+                e.target.closest('.post-author-link') ||
+                e.target.closest('.user-suggest-item') ||
+                e.target.closest('.c-header') ||
+                e.target.id === 'story-viewer-avatar') {
+                e.target.src = '/static/images/default-avatar.png';
+            } else {
+                e.target.src = '/static/images/default-cover.png';
+            }
+        }
+    }
+}, true); // Use capturing phase since error events do not bubble

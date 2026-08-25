@@ -225,12 +225,12 @@ textarea, input, select {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 12px 16px;
+    padding: 12px 20px;
     color: var(--text-primary);
     font-family: var(--font-heading);
     font-weight: 600;
-    font-size: 16px;
-    border-radius: var(--border-radius-md);
+    font-size: 15px;
+    border-radius: 30px; /* Modern rounded pill */
     transition: var(--transition-smooth);
 }
 
@@ -238,30 +238,24 @@ textarea, input, select {
     width: 22px;
     height: 22px;
     color: var(--text-secondary);
+    transition: var(--transition-smooth);
 }
 
-.sidebar-item:hover, .sidebar-item.active {
-    background-color: var(--nav-active-bg);
+.sidebar-item:hover {
+    background-color: rgba(114, 201, 36, 0.05);
     color: var(--parrot-green);
+    transform: translateX(4px);
+}
+
+.sidebar-item.active {
+    background: linear-gradient(135deg, rgba(114, 201, 36, 0.15) 0%, rgba(114, 201, 36, 0.05) 100%);
+    color: var(--parrot-green);
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(114, 201, 36, 0.08);
 }
 
 .sidebar-item:hover i, .sidebar-item.active i {
     color: var(--parrot-green);
-}
-
-.sidebar-item.active {
-    position: relative;
-}
-.sidebar-item.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
-    height: 20px;
-    background-color: var(--parrot-green);
-    border-radius: 0 4px 4px 0;
 }
 
 .sidebar-create-btn {
@@ -355,9 +349,14 @@ textarea, input, select {
     height: 70px;
     border-radius: 50%;
     padding: 3px;
-    background: var(--gradient-primary);
     position: relative;
     transition: var(--transition-smooth);
+}
+.story-avatar-container.unread {
+    background: var(--gradient-primary);
+}
+.story-avatar-container.read {
+    background: var(--border-color);
 }
 .story-avatar-container img {
     width: 100%;
@@ -368,7 +367,10 @@ textarea, input, select {
 }
 
 .story-card:hover .story-avatar-container {
-    transform: scale(1.05);
+    transform: scale(1.08);
+    filter: brightness(1.05);
+    box-shadow: 0 6px 18px rgba(114, 201, 36, 0.22);
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, filter 0.2s ease;
 }
 
 .story-user-name {
@@ -905,14 +907,21 @@ textarea, input, select {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-md);
     padding: 20px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     display: flex;
     flex-direction: column;
     gap: 14px;
-    transition: var(--transition-smooth);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+    animation: postCardIn 0.35s ease both;
 }
 .post-card-wrapper:hover {
-    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.09);
+    border-color: rgba(114, 201, 36, 0.2);
+}
+@keyframes postCardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .post-header-row {
@@ -1003,15 +1012,20 @@ textarea, input, select {
     font-weight: 600;
     padding: 6px 12px;
     border-radius: 20px;
-    transition: var(--transition-smooth);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .action-btn-item:hover {
-    background-color: var(--bg-secondary);
+    background-color: rgba(245, 40, 135, 0.06);
     color: var(--bright-pink);
+    transform: scale(1.05);
 }
 .action-btn-item i {
     width: 18px;
     height: 18px;
+    transition: transform 0.2s ease;
+}
+.action-btn-item:hover i {
+    transform: scale(1.15);
 }
 
 .action-btn-item.active {
@@ -1575,6 +1589,27 @@ textarea, input, select {
     background: rgba(255, 255, 255, 0.3);
 }
 .story-viewer-close svg {
+    width: 18px;
+    height: 18px;
+}
+.story-viewer-delete-btn {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    border: none;
+}
+.story-viewer-delete-btn:hover {
+    background: rgba(245, 40, 135, 0.25);
+    color: #ff4d94;
+    transform: scale(1.05);
+}
+.story-viewer-delete-btn svg {
     width: 18px;
     height: 18px;
 }

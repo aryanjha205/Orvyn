@@ -13,6 +13,31 @@ let storyThreads = [];
 let activeThreadIndex = 0;
 let activeStoryIndex = 0;
 let storyTimer = null;
+let storyStartTime = 0;
+let storyDuration = 6000;
+let storyTimeRemaining = 6000;
+let isStoryPaused = false;
+
+function getViewedStories() {
+    try {
+        const data = localStorage.getItem('orvyn_viewed_stories');
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function markStoryAsViewed(storyId) {
+    try {
+        let viewed = getViewedStories();
+        if (!viewed.includes(storyId)) {
+            viewed.push(storyId);
+            localStorage.setItem('orvyn_viewed_stories', JSON.stringify(viewed));
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Initial Feeds Load
@@ -154,10 +179,15 @@ function renderStoriesTray(threads) {
     tray.appendChild(addCard);
     
     threads.forEach((t, tIndex) => {
+        const viewedList = getViewedStories();
+        // Check if all stories in the thread are viewed
+        const isAllViewed = t.stories.every(story => viewedList.includes(story.id));
+        const statusClass = isAllViewed ? 'read' : 'unread';
+
         const card = document.createElement('div');
         card.className = 'story-card';
         card.innerHTML = `
-            <div class="story-avatar-container">
+            <div class="story-avatar-container ${statusClass}">
                 <img src="${t.user.profile_image}" alt="${t.user.name}">
             </div>
             <span class="story-user-name">${t.user.name.split(' ')[0]}</span>
@@ -217,6 +247,24 @@ function openStoryViewer(threadIdx, storyIdx) {
     document.getElementById('story-viewer-close').onclick = closeStoryViewer;
     document.getElementById('story-prev-btn').onclick = navigateStoryPrev;
     document.getElementById('story-next-btn').onclick = navigateStoryNext;
+
+    // Press and hold pause/resume hooks
+    const viewerCard = document.querySelector('.story-viewer-card');
+    if (viewerCard) {
+        viewerCard.onmousedown = (e) => {
+            if (e.target.closest('#story-viewer-delete-btn') || e.target.closest('#story-viewer-close') || e.target.closest('.story-nav')) return;
+            pauseStory();
+        };
+        viewerCard.onmouseup = resumeStory;
+        viewerCard.onmouseleave = resumeStory;
+        
+        viewerCard.ontouchstart = (e) => {
+            if (e.target.closest('#story-viewer-delete-btn') || e.target.closest('#story-viewer-close') || e.target.closest('.story-nav')) return;
+            pauseStory();
+        };
+        viewerCard.ontouchend = resumeStory;
+        viewerCard.ontouchcancel = resumeStory;
+    }
 }
 
 function playActiveStory() {
@@ -237,32 +285,59 @@ function playActiveStory() {
         return;
     }
     
+    // Mark as viewed
+    markStoryAsViewed(story.id);
+    
     // Set user headers
     document.getElementById('story-viewer-name').textContent = thread.user.name;
     document.getElementById('story-viewer-avatar').src = thread.user.profile_image;
     
-    // Render progress indicators
-    const progressRow = document.getElementById('story-progress-row');
-    progressRow.innerHTML = '';
-    thread.stories.forEach((_, sIdx) => {
-        const segment = document.createElement('div');
-        segment.className = 'story-progress-segment';
-        const fill = document.createElement('div');
-        fill.className = 'story-progress-fill';
-        
-        if (sIdx < activeStoryIndex) {
-            fill.style.width = '100%';
-        } else if (sIdx === activeStoryIndex) {
-            fill.style.width = '0%';
-            // Animate fill bar
-            setTimeout(() => fill.style.width = '100%', 50);
+    // Show/hide Delete button
+    const deleteBtn = document.getElementById('story-viewer-delete-btn');
+    if (deleteBtn) {
+        if (thread.user.id === CURRENT_USER.id) {
+            deleteBtn.classList.remove('hidden');
+            
+            // Delete story click action
+            deleteBtn.onclick = async (e) => {
+                e.stopPropagation();
+                pauseStory();
+                if (confirm('Delete this story status permanently?')) {
+                    try {
+                        const response = await fetch(`/api/stories/${story.id}`, {
+                            method: 'DELETE'
+                        });
+                        const result = await response.json();
+                        
+                        if (response.ok && result.success) {
+                            showToast('Story deleted successfully!');
+                            closeStoryViewer();
+                            await loadStories();
+                        } else {
+                            showToast(result.error || 'Failed to delete story.');
+                            resumeStory();
+                        }
+                    } catch(err) {
+                        showToast('Connection error during deletion.');
+                        resumeStory();
+                    }
+                } else {
+                    resumeStory();
+                }
+            };
         } else {
-            fill.style.width = '0%';
+            deleteBtn.classList.add('hidden');
         }
-        
-        segment.appendChild(fill);
-        progressRow.appendChild(segment);
-    });
+    }
+    
+    // Determine duration
+    storyDuration = story.media_type === 'video' ? 10000 : 6000;
+    storyTimeRemaining = storyDuration;
+    storyStartTime = Date.now();
+    isStoryPaused = false;
+    
+    // Render progress indicators
+    renderStoryProgressIndicators();
     
     // Render content
     const mediaBox = document.getElementById('story-viewer-media-box');
@@ -275,18 +350,108 @@ function playActiveStory() {
         vid.playsInline = true;
         mediaBox.appendChild(vid);
         
-        // Wait for video end or 8s timeout
+        vid.onloadedmetadata = () => {
+            storyDuration = Math.min(vid.duration * 1000, 15000) || 10000;
+            storyTimeRemaining = storyDuration;
+            storyStartTime = Date.now();
+            renderStoryProgressIndicators();
+            
+            clearTimeout(storyTimer);
+            storyTimer = setTimeout(navigateStoryNext, storyTimeRemaining);
+        };
+        
         vid.onended = navigateStoryNext;
+        
         clearTimeout(storyTimer);
-        storyTimer = setTimeout(navigateStoryNext, 10000);
+        storyTimer = setTimeout(navigateStoryNext, storyTimeRemaining);
     } else {
         const img = document.createElement('img');
         img.src = story.media;
         mediaBox.appendChild(img);
         
         clearTimeout(storyTimer);
-        storyTimer = setTimeout(navigateStoryNext, 6000); // 6s display for photos
+        storyTimer = setTimeout(navigateStoryNext, storyTimeRemaining);
     }
+    
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
+
+function renderStoryProgressIndicators() {
+    const thread = storyThreads[activeThreadIndex];
+    if (!thread) return;
+    
+    const progressRow = document.getElementById('story-progress-row');
+    progressRow.innerHTML = '';
+    
+    thread.stories.forEach((_, sIdx) => {
+        const segment = document.createElement('div');
+        segment.className = 'story-progress-segment';
+        const fill = document.createElement('div');
+        fill.className = 'story-progress-fill';
+        
+        if (sIdx < activeStoryIndex) {
+            fill.style.width = '100%';
+            fill.style.transition = 'none';
+        } else if (sIdx === activeStoryIndex) {
+            fill.style.width = '0%';
+            fill.style.transition = 'none';
+            setTimeout(() => {
+                if (!isStoryPaused) {
+                    fill.style.transition = `width ${storyTimeRemaining}ms linear`;
+                    fill.style.width = '100%';
+                }
+            }, 50);
+        } else {
+            fill.style.width = '0%';
+            fill.style.transition = 'none';
+        }
+        
+        segment.appendChild(fill);
+        progressRow.appendChild(segment);
+    });
+}
+
+function pauseStory() {
+    if (isStoryPaused) return;
+    isStoryPaused = true;
+    
+    const elapsed = Date.now() - storyStartTime;
+    storyTimeRemaining = Math.max(0, storyTimeRemaining - elapsed);
+    clearTimeout(storyTimer);
+    
+    const mediaBox = document.getElementById('story-viewer-media-box');
+    const video = mediaBox.querySelector('video');
+    if (video) video.pause();
+    
+    const activeFill = document.querySelector('.story-progress-segment:nth-child(' + (activeStoryIndex + 1) + ') .story-progress-fill');
+    if (activeFill) {
+        const currentWidth = activeFill.getBoundingClientRect().width;
+        const parentWidth = activeFill.parentElement.getBoundingClientRect().width;
+        activeFill.style.width = (currentWidth / parentWidth * 100) + '%';
+        activeFill.style.transition = 'none';
+    }
+}
+
+function resumeStory() {
+    if (!isStoryPaused) return;
+    isStoryPaused = false;
+    storyStartTime = Date.now();
+    
+    const mediaBox = document.getElementById('story-viewer-media-box');
+    const video = mediaBox.querySelector('video');
+    if (video) video.play();
+    
+    const activeFill = document.querySelector('.story-progress-segment:nth-child(' + (activeStoryIndex + 1) + ') .story-progress-fill');
+    if (activeFill) {
+        activeFill.style.transition = `width ${storyTimeRemaining}ms linear`;
+        activeFill.offsetHeight; // Force reflow
+        activeFill.style.width = '100%';
+    }
+    
+    clearTimeout(storyTimer);
+    storyTimer = setTimeout(navigateStoryNext, storyTimeRemaining);
 }
 
 function navigateStoryNext() {
@@ -295,7 +460,6 @@ function navigateStoryNext() {
     if (activeStoryIndex + 1 < thread.stories.length) {
         openStoryViewer(activeThreadIndex, activeStoryIndex + 1);
     } else {
-        // Move to next thread
         if (activeThreadIndex + 1 < storyThreads.length) {
             openStoryViewer(activeThreadIndex + 1, 0);
         } else {
@@ -309,12 +473,10 @@ function navigateStoryPrev() {
     if (activeStoryIndex > 0) {
         openStoryViewer(activeThreadIndex, activeStoryIndex - 1);
     } else {
-        // Move to previous thread last story
         if (activeThreadIndex > 0) {
             const prevThread = storyThreads[activeThreadIndex - 1];
             openStoryViewer(activeThreadIndex - 1, prevThread.stories.length - 1);
         } else {
-            // Restart current story
             openStoryViewer(activeThreadIndex, 0);
         }
     }
@@ -324,6 +486,8 @@ function closeStoryViewer() {
     clearTimeout(storyTimer);
     const modal = document.getElementById('story-viewer');
     if (modal) modal.classList.add('hidden');
+    // Re-render tray to show updated read/unread status borders instantly
+    renderStoriesTray(storyThreads);
 }
 
 // Comments Box Drawer Actions

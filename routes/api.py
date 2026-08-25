@@ -1079,6 +1079,29 @@ def create_story():
     except Exception as e:
         return jsonify({'error': f"Failed to post story: {str(e)}"}), 400
 
+@api_bp.route('/api/stories/<story_id>', methods=['DELETE'])
+@login_required
+def delete_story(story_id):
+    db = get_db()
+    current_user_id = session.get('user_id')
+    
+    try:
+        story = db.stories.find_one({'_id': ObjectId(story_id)})
+        if not story:
+            return jsonify({'error': 'Story not found.'}), 404
+            
+        if str(story['user_id']) != current_user_id:
+            return jsonify({'error': 'You are not authorized to delete this story.'}), 403
+            
+        db.stories.delete_one({'_id': ObjectId(story_id)})
+        
+        return jsonify({
+            'success': True,
+            'message': 'Story deleted successfully!'
+        })
+    except Exception as e:
+        return jsonify({'error': f"Failed to delete story: {str(e)}"}), 400
+
 # Creator Analytics
 @api_bp.route('/api/analytics', methods=['GET'])
 @login_required

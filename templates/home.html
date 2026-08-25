@@ -225,7 +225,12 @@
                 <img id="story-viewer-avatar" src="/static/images/default-avatar.png" alt="User">
                 <span id="story-viewer-name">User Name</span>
             </div>
-            <button class="story-viewer-close" id="story-viewer-close"><i data-lucide="x"></i></button>
+            <div class="story-viewer-header-actions" style="display: flex; align-items: center; gap: 12px;">
+                <button class="story-viewer-delete-btn hidden" id="story-viewer-delete-btn" title="Delete Story">
+                    <i data-lucide="trash-2"></i>
+                </button>
+                <button class="story-viewer-close" id="story-viewer-close"><i data-lucide="x"></i></button>
+            </div>
         </div>
         <div class="story-viewer-content" id="story-viewer-media-box">
             <!-- Image or Video rendered here -->

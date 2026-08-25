@@ -345,7 +345,18 @@ body {
 .post-card-actions { border-top: 1px solid #edf0f2; padding-top: 11px; }
 .post-media-triggers { width: 100%; justify-content: space-around; }
 .media-trigger-item { font-size: 13px; gap: 6px; }
-.publish-post-btn { display: none; }
+.publish-post-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px 10px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 14px rgba(114, 201, 36, 0.25);
+}
 
 .ai-promo-banner {
     min-height: 190px;
